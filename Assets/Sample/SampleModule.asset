@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ad64af98f274640a9749e29b9611b9b, type: 3}
   m_Name: SampleModule
   m_EditorClassIdentifier: 
-  configInt: 48
+  configInt: 300

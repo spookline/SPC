@@ -12,7 +12,11 @@ namespace Spookline.SPC.Events {
         ///     Registers an event reactor.
         /// </summary>
         /// <typeparam name="T">type of the reactor which shall be subscribed</typeparam>
-        public EventReactor<T> RegisterEvent<T>() where T : EventBase {
+        public EventReactor<T> RegisterEvent<T>() where T : Evt<T> {
+            if (Reactors.TryGetValue(typeof(T), out var eventReactor)) {
+                return (EventReactor<T>)eventReactor;
+            }
+
             var reactor = new EventReactor<T>();
             Reactors[typeof(T)] = reactor;
             return reactor;
@@ -22,6 +26,10 @@ namespace Spookline.SPC.Events {
         ///     Registers an event reactor.
         /// </summary>
         public void RegisterEvent(IEventReactor reactor) {
+            if (Reactors.ContainsKey(reactor.TypeDelegate())) {
+                return;
+            }
+
             Reactors[reactor.TypeDelegate()] = reactor;
         }
 
@@ -52,7 +60,7 @@ namespace Spookline.SPC.Events {
         ///     Retrieves an event reactor.
         /// </summary>
         /// <typeparam name="T">type of the reactor</typeparam>
-        public EventReactor<T> Get<T>() where T : EventBase {
+        public EventReactor<T> Get<T>() where T : Evt<T> {
             return (EventReactor<T>)Reactors[typeof(T)];
         }
 
@@ -69,16 +77,8 @@ namespace Spookline.SPC.Events {
         ///     See <see cref="EventReactor{T}" /> for details about required property attributes.
         /// </summary>
         /// <param name="evt">the event argument object</param>
-        public void Raise(EventBase evt) {
+        public void Raise<T>(T evt) where T : Evt<T> {
             Reactors[evt.GetType()].RaiseUnsafe(evt);
-        }
-
-        /// <summary>
-        ///     Registers an event listener.
-        /// </summary>
-        /// <param name="listener">the listener which shall be subscribed</param>
-        public void RegisterListener(Listener listener) {
-            listener.RegisterAll(this);
         }
 
     }

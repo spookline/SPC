@@ -6,66 +6,84 @@ using Spookline.SPC.Events;
 using UnityEngine;
 
 namespace Spookline.SPC.Ext {
-    public abstract class SpookBehaviour : MonoBehaviour {
+    public abstract class SpookBehaviour : MonoBehaviour, IDisposableContainer {
 
-        private SpookInstance _spookInstance;
-
-        protected virtual void Awake() {
-            _spookInstance = SpookInstance.Create(this);
-            _spookInstance.Awake();
-        }
+        private readonly List<IDisposable> _disposables = new();
 
         protected virtual void OnDestroy() {
-            _spookInstance.Dispose();
+            foreach (var disposable in _disposables) {
+                disposable.Dispose();
+            }
+        }
+
+        public EventCallbackBuilder<T> On<T>() where T : Evt<T> {
+            return new EventCallbackBuilder<T>(this);
+        }
+
+        public void DisposeOnDestroy(IDisposable disposable) {
+            _disposables.Add(disposable);
+        }
+
+        public void RemoveOnDestroyDisposal(IDisposable disposable) {
+            _disposables.Remove(disposable);
         }
 
     }
 
-    public interface ISpookInstanceMember {
+    public interface IDisposableContainer {
 
-        public void InstanceAwake(SpookInstance instance) { }
-        public void InstanceDispose(SpookInstance instance) { }
+        public void DisposeOnDestroy(IDisposable disposable);
+        public void RemoveOnDestroyDisposal(IDisposable disposable);
 
     }
 
-    public class SpookInstance : IDisposable, IListener {
+    public readonly struct EventCallbackBuilder<T> where T : Evt<T> {
 
-        public Component component;
-        private List<ISpookInstanceMember> _members = new();
-        public Dictionary<Type, List<object>> Subscriptions { get; } = new();
+        private readonly IDisposableContainer _container;
 
-        public void Awake() {
-            foreach (var member in _members) {
-                member.InstanceAwake(this);
-            }
-
-            (this as IListener).RegisterAll(component, component.GetType());
+        public EventCallbackBuilder(IDisposableContainer container) {
+            _container = container;
         }
 
-        public void Dispose() {
-            foreach (var member in _members) {
-                member.InstanceDispose(this);
+        public HandlerRegistration<T> Do(Events.EventHandler<T> action, int priority = 0, string debugName = null) {
+#if DEBUG
+            if (debugName == null) {
+                var clazz = _container.GetType().FullName;
+                var name = EventReactorInfo.GetDebugName(action);
+                debugName = $"@{clazz} {name}";
             }
+#endif
 
-            (this as IListener).UnregisterAll();
+            var registration = EventReactor<T>.Shared.Subscribe(action, priority, debugName);
+            _container.DisposeOnDestroy(registration);
+            return registration;
         }
 
-        public static SpookInstance Create(Component instance) {
-            var spookInstance = new SpookInstance();
-            spookInstance.component = instance;
-            var type = instance.GetType();
-            var fields = type.GetRuntimeFields().ToList();
-
-            foreach (var field in fields) {
-                var fieldType = field.FieldType;
-                if (fieldType.GetInterfaces().Contains(typeof(ISpookInstanceMember))) {
-                    var configValue = field.GetValue(instance) as ISpookInstanceMember;
-                    spookInstance._members.Add(configValue);
-                    Debug.Log($"Found config value {field.Name} in {instance.GetType().Name}");
-                }
+        public HandlerRegistration<T> Stream(Events.StreamEventHandler<T> action, int priority = 0,
+            string debugName = null) {
+#if DEBUG
+            if (debugName == null) {
+                var clazz = _container.GetType().FullName;
+                var name = EventReactorInfo.GetDebugName(action);
+                debugName = $"@{clazz} {name}";
             }
+#endif
+            var registration = EventReactor<T>.Shared.SubscribeStream(action, priority, debugName);
+            _container.DisposeOnDestroy(registration);
+            return registration;
+        }
 
-            return spookInstance;
+        public HandlerRegistration<T> DoOnce(Events.EventHandler<T> action, int priority = 0, string debugName = null) {
+#if DEBUG
+            if (debugName == null) {
+                var clazz = _container.GetType().FullName;
+                var name = EventReactorInfo.GetDebugName(action);
+                debugName = $"@{clazz} {name}";
+            }
+#endif
+            var registration = EventReactor<T>.Shared.SubscribeOnce(action, priority, debugName);
+            _container.DisposeOnDestroy(registration);
+            return registration;
         }
 
     }

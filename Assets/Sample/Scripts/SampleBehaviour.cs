@@ -4,21 +4,26 @@ using UnityEngine;
 
 public class SampleBehaviour : SpookBehaviour {
 
-    public ConfigValue<int> configInt = ConfigValue<int>.Ref<SampleModule>(nameof(SampleModule.configInt));
-
-    protected override void Awake() {
-        base.Awake();
-        Debug.Log($"SampleBehaviour awake with configInt: {configInt}");
+    public void Awake() {
+        On<MyCustomEvent>().Do(OnCustomEvent);
+        On<MyCustomEvent>().Do(OnCustomEvent2);
+        On<MyCustomEvent>().Do(OnCustomEventHigh, -5);
+        On<MyCustomEvent>().Do(OnCustomEventLow, 5);
     }
 
-    [ContextMenu("Check Current")]
-    public void CheckCurrent() {
-        Debug.Log($"SampleBehaviour checking current configInt: {configInt}");
-    }
-
-    [EventHandler]
     public void OnCustomEvent(MyCustomEvent evt) {
         Debug.Log($"Received custom event with value: {evt.MyValue}");
     }
 
+    public void OnCustomEvent2(MyCustomEvent evt) {
+        Debug.Log($"Received custom event 2 with value: {evt.MyValue}");
+    }
+
+    public void OnCustomEventHigh(MyCustomEvent evt) {
+        Debug.Log($"Received custom event with high priority: {evt.MyValue}");
+    }
+
+    public void OnCustomEventLow(MyCustomEvent evt) {
+        Debug.Log($"Received custom event with low priority: {evt.MyValue}");
+    }
 }

@@ -6,28 +6,36 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "SampleModule", menuName = "Modules/Sample Module")]
 public class SampleModule : Module {
 
-    [ConfigValue]
-    public int configInt = 48;
-
     public override void Load() {
         base.Load();
-        Debug.Log($"SampleModule loaded with configInt: {configInt}");
     }
 
     public override void Unload() {
         Debug.Log($"SampleModule unloaded");
         base.Unload();
     }
-    
+
+    private void OnEnable() {
+        var counter = 0;
+        On<MyCustomEvent>().Stream(x => {
+            var i = counter++;
+            Debug.Log($"$$> Stream event {i} received with value: {x.MyValue}");
+            return i > 1;
+        });
+        On<MyCustomEvent>().DoOnce(x => {
+            Debug.Log($"$$> Single subscription event received with value: {x.MyValue}");
+        });
+        
+    }
+
     [ContextMenu("Raise Event")]
     public void RaiseEvent() {
-        var myEvent = new MyCustomEvent { MyValue = 42 };
-        myEvent.Raise();
+        new MyCustomEvent { MyValue = 42 }.Raise();
     }
 
 }
 
-public class MyCustomEvent : EventBase {
+public class MyCustomEvent : Evt<MyCustomEvent> {
 
     public int MyValue { get; set; }
 
