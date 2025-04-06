@@ -2,8 +2,10 @@
 
 namespace Sample.Audio {
     public static class AudioDefs {
+        
+        public static readonly AudioGroupDef Sfx = new("Master/SFX");
 
-        public static AudioDef Fart = new("fart");
+        public static AudioDef Fart = new("fart", Sfx);
 
     }
 }

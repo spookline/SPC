@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Audio;
 using UnityEngine.Pool;
 using Object = UnityEngine.Object;
 
@@ -15,6 +17,9 @@ namespace Spookline.SPC.Audio {
 
         private readonly Dictionary<string, AudioClip> _clips = new();
         private readonly ObjectPool<AudioTrackedObject> _pool;
+        
+        internal AudioMixer Mixer => _mixer ??= Addressables.LoadAssetAsync<AudioMixer>("AudioMixer").WaitForCompletion();
+        private AudioMixer _mixer;
 
         public AudioManager() {
             if (IsInitialized) return;
@@ -128,18 +133,40 @@ namespace Spookline.SPC.Audio {
 
     }
 
+    /// <summary>
+    /// Represents a definition for grouping audio that shares common properties,
+    /// such as an associated Audio Mixer Group for routing and effects processing.
+    /// Provides functionality to retrieve the corresponding AudioMixerGroup based
+    /// on a specified path in the Audio Mixer hierarchy.
+    ///
+    /// Example paths: Master/SFX, Master/Music, Master/Ambience
+    /// </summary>
+    public class AudioGroupDef {
+
+        private readonly string _path;
+        public AudioGroupDef(string path) {
+            _path = path;
+        }
+
+        public AudioMixerGroup MixerGroup =>
+            _mixerGroup ??= AudioManager.Instance.Mixer.FindMatchingGroups(_path).First();
+        private AudioMixerGroup _mixerGroup;
+    }
+
     public readonly struct AudioDef {
 
         public readonly string audioAsset;
+        public readonly AudioGroupDef group;
         public readonly bool loop;
         public readonly float volume;
         public readonly float pitch;
         public readonly float minDistance;
         public readonly float maxDistance;
         
-        public AudioDef(string audioAsset, bool loop = false, float volume = 1f, float pitch = 1f, float minDistance = 1f,
+        public AudioDef(string audioAsset, AudioGroupDef group = null, bool loop = false, float volume = 1f, float pitch = 1f, float minDistance = 1f,
             float maxDistance = 15f) {
             this.audioAsset = audioAsset;
+            this.group = group;
             this.loop = loop;
             this.volume = volume;
             this.pitch = pitch;
@@ -149,11 +176,12 @@ namespace Spookline.SPC.Audio {
 
         public AudioDef With(bool? loop = null, float? volume = null, float? pitch = null,
             float? minDistance = null, float? maxDistance = null) {
-            return new AudioDef(audioAsset, loop ?? this.loop, volume ?? this.volume, pitch ?? this.pitch,
+            return new AudioDef(audioAsset, group, loop ?? this.loop, volume ?? this.volume, pitch ?? this.pitch,
                 minDistance ?? this.minDistance, maxDistance ?? this.maxDistance);
         }
 
         internal void Apply(AudioSource source) {
+            if(group != null) source.outputAudioMixerGroup = group.MixerGroup;
             source.volume = volume;
             source.pitch = pitch;
             source.minDistance = minDistance;
