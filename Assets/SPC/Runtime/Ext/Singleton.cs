@@ -6,7 +6,7 @@ namespace Spookline.SPC {
     /// Ensures that only one instance of the given type <typeparamref name="T"/> can exist.
     /// </summary>
     /// <typeparam name="T">The type of the class that will implement the Singleton pattern.</typeparam>
-    public class Singleton<T> {
+    public abstract class Singleton<T> {
 
         private static T _instance;
 

@@ -30,32 +30,12 @@ namespace Spookline.SPC.Ext {
         }
     }
 
-    
-    [Serializable]
-    public class ModuleConfigData {
-
-        public string[] names;
-        public string[] values;
-
-    }
-    
-
     public class ModuleInstance {
 
         public Module module;
-        public Dictionary<string, GetConfigValueDelegate> configValueGetters = new();
 
         public ModuleInstance(Module module) {
             this.module = module;
-            Initialize();
         }
-
-        public delegate object GetConfigValueDelegate();
-
-        private void Initialize() {
-            var type = module.GetType();
-            var fields = type.GetRuntimeFields().ToList();
-        }
-
     }
 }

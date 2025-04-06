@@ -7,9 +7,7 @@ namespace Spookline.SPC.Editor {
 
         public override void OnInspectorGUI() {
             base.OnInspectorGUI();
-            if (GUILayout.Button("Test")) {
-                Debug.Log("Test button clicked");
-            }
+   
         }
     }
 }

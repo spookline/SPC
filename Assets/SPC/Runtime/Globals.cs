@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Spookline.SPC.Events;
 using Spookline.SPC.Ext;
 using UnityEngine;
@@ -37,28 +38,6 @@ namespace Spookline.SPC {
 
         // Update is called once per frame
         void Update() { }
-
-        private void RunDiscovery() {
-            var assemblyTypes = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(assembly => assembly.GetTypes())
-                .ToList();
-
-            foreach (var eventType in assemblyTypes
-                         .Where(type => type.IsSubclassOf(typeof(UnityEngine.Event)))
-                         .Where(type => !type.IsAbstract)) {
-                var eventAttribute = eventType.GetCustomAttributes(true).FirstOrDefault(x => x is EventAttribute);
-                if (eventAttribute is EventAttribute { DoNotRegister: true }) continue;
-
-                var genericType = typeof(EventReactor<>)
-                    .GetGenericTypeDefinition()
-                    .MakeGenericType(eventType);
-
-                var reactor = Activator.CreateInstance(genericType) as IEventReactor;
-                EventManager.Instance.RegisterEvent(reactor);
-                Debug.Log($"Registered event {eventType.Name}. EventReactor: {reactor}. Generic: {genericType}");
-            }
-
-        }
         
     }
 }
