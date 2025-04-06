@@ -7,27 +7,38 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Spookline.SPC.Ext {
-    public abstract class Module : ScriptableObject {
-
+    public abstract class Module : ScriptableObject, IDisposableContainer {
+        
+        private List<IDisposable> _disposables = new();
+        
         public virtual void Load() { }
-
-        public virtual void Unload() { }
-
-
-        [ContextMenu("Update Config Values")]
-        private void UpdateConfigValues() {
-            var core = Globals.Instance;
-            var moduleType = GetType();
-            foreach (var (key, getter) in core.ModulesByType[moduleType].configValueGetters) {
-                core.onConfigValueChanged.Raise(new ConfigValueChangedEvent() {
-                    ModuleType = moduleType,
-                    FieldName = key,
-                    Value = getter.Invoke()
-                });
-            }
+        
+        public virtual void Unload() {
+            foreach (var disposable in _disposables) disposable.Dispose();
         }
 
+        public void DisposeOnDestroy(IDisposable disposable) {
+            _disposables.Add(disposable);
+        }
+
+        public void RemoveOnDestroyDisposal(IDisposable disposable) {
+            _disposables.Remove(disposable);
+        }
+        
+        public EventCallbackBuilder<T> On<T>() where T : Evt<T> {
+            return new EventCallbackBuilder<T>(this);
+        }
     }
+
+    
+    [Serializable]
+    public class ModuleConfigData {
+
+        public string[] names;
+        public string[] values;
+
+    }
+    
 
     public class ModuleInstance {
 
@@ -44,12 +55,6 @@ namespace Spookline.SPC.Ext {
         private void Initialize() {
             var type = module.GetType();
             var fields = type.GetRuntimeFields().ToList();
-
-            foreach (var field in fields) {
-                if (field.GetCustomAttribute<ConfigValueAttribute>() != null) {
-                    configValueGetters[field.Name] = () => field.GetValue(module);
-                }
-            }
         }
 
     }

@@ -11,6 +11,5 @@ namespace Spookline.SPC.Editor {
                 Debug.Log("Test button clicked");
             }
         }
-
     }
 }

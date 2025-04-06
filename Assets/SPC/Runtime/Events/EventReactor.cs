@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Spookline.SPC.Events {
     /// <summary>
@@ -10,10 +12,15 @@ namespace Spookline.SPC.Events {
     ///     Event subscribers should manipulate the properties of the event they receive to alter data.
     /// </summary>
     /// <typeparam name="T">type of the event</typeparam>
-    public class EventReactor<T> : IEventReactor where T : EventBase {
+    public class EventReactor<T> : IEventReactor where T : Evt<T> {
+
+        private static EventReactor<T> _globalReactor;
+
+        public static EventReactor<T> Shared => _globalReactor ??= EventManager.Instance.RegisterEvent<T>();
+
 
         private readonly HandlerRegistrationComparer<T> _comparer = new();
-        private readonly List<HandlerRegistration<T>> _registrations = new();
+        private List<HandlerRegistration<T>> _registrations = new();
 
         /// <summary>
         ///     Returns the type of the generic <see cref="T" />.
@@ -59,10 +66,33 @@ namespace Spookline.SPC.Events {
             Unsubscribe(subscription as EventHandler<T>);
         }
 
-        public string GetDebugName(object subscription) {
+        public string ResolveDebugName(object subscription) {
             lock (this) {
-                return _registrations.Find(x => x.Handler == subscription as EventHandler<T>).DebugName;
+                return _registrations.FirstOrDefault(x => x.Handler == subscription as EventHandler<T>)?.DebugName;
             }
+        }
+
+        public EventReactorInfo CreateInfo() {
+            var priorityRows = new List<EventReactorInfo.PriorityRow>();
+            lock (this) {
+                foreach (var group in _registrations.GroupBy(x => x.Priority)) {
+                    var handlers = group
+                        .GroupBy(y => y.DebugName)
+                        .Select(g => g.Count() == 1 ? g.Key : $"{g.Key} ({g.Count()})")
+                        .ToList();
+
+                    priorityRows.Add(new EventReactorInfo.PriorityRow {
+                        Priority = group.Key,
+                        Handlers = handlers
+                    });
+                }
+            }
+
+            return new EventReactorInfo {
+                Name = typeof(T).Name,
+                Type = typeof(T),
+                Rows = priorityRows
+            };
         }
 
         /// <summary>
@@ -73,6 +103,7 @@ namespace Spookline.SPC.Events {
         public void Raise(T evt) {
             lock (this) {
                 foreach (var registration in _registrations) registration.Handler.Invoke(evt);
+                evt.InvokeFinalizers();
             }
         }
 
@@ -82,22 +113,49 @@ namespace Spookline.SPC.Events {
         /// <param name="handler">the delegate to subscribe</param>
         /// <param name="priority">the priority of the subscription</param>
         /// <param name="debugName">The debug name of the subscription</param>
-        public void Subscribe(EventHandler<T> handler, int priority = 0, string debugName = "") {
+        public HandlerRegistration<T> Subscribe(EventHandler<T> handler, int priority = 0, string debugName = null) {
             lock (this) {
-                _registrations.Add(new HandlerRegistration<T>(priority, handler, debugName));
-                _registrations.Sort(_comparer);
+                debugName ??= ResolveDebugName(handler);
+                var registration = new HandlerRegistration<T>(this, priority, handler, debugName);
+                _registrations = _registrations
+                    .Append(registration)
+                    .OrderBy(x => x.Priority)
+                    .ToList();
+                return registration;
             }
         }
 
-        public void SubscribeOnce(EventHandler<T> handler, int priority = 0, string debugName = "") {
-            HandlerRef reference = new();
-            EventHandler<T> internalHandler = args => {
-                handler(args);
-                Unsubscribe(reference.reference);
-                Debug.Log("Subscribed once and now unsubscribing");
-            };
-            reference.reference = internalHandler;
-            Subscribe(internalHandler, priority, debugName);
+        /// <summary>
+        ///     Subscribes a delegate to the backing event.
+        /// </summary>
+        /// <param name="handler">the delegate to subscribe</param>
+        /// <param name="priority">the priority of the subscription</param>
+        /// <param name="debugName">The debug name of the subscription</param>
+        public HandlerRegistration<T>
+            SubscribeOnce(EventHandler<T> handler, int priority = 0, string debugName = null) {
+            lock (this) {
+                var consumer = new SingleConsumer(handler);
+                var registration = Subscribe(consumer.Handle, priority, debugName);
+                consumer.registration = registration;
+                return registration;
+            }
+        }
+
+        /// <summary>
+        ///     Subscribes a stream handler delegate to the backing event.
+        ///     The handler will be invoked and if it returns true, it will be unsubscribed automatically.
+        /// </summary>
+        /// <param name="handler">the stream handler delegate to subscribe</param>
+        /// <param name="priority">the priority of the subscription</param>
+        /// <param name="debugName">The debug name of the subscription</param>
+        public HandlerRegistration<T> SubscribeStream(StreamEventHandler<T> handler, int priority = 0,
+            string debugName = null) {
+            lock (this) {
+                var consumer = new StreamConsumer(handler);
+                var registration = Subscribe(consumer.Handle, priority, debugName);
+                consumer.registration = registration;
+                return registration;
+            }
         }
 
         /// <summary>
@@ -110,9 +168,47 @@ namespace Spookline.SPC.Events {
             }
         }
 
-        private class HandlerRef {
+        /// <summary>
+        ///     Unsubscribes a delegate from the backing event.
+        /// </summary>
+        /// <param name="registration">the registration to unsubscribe</param>
+        public void Unsubscribe(HandlerRegistration<T> registration) {
+            lock (this) {
+                _registrations.Remove(registration);
+            }
+        }
 
-            public EventHandler<T> reference;
+        private class SingleConsumer {
+
+            private readonly EventHandler<T> _handler;
+            internal HandlerRegistration<T> registration;
+
+            public SingleConsumer(EventHandler<T> handler) {
+                _handler = handler;
+            }
+
+            public void Handle(T evt) {
+                _handler.Invoke(evt);
+                evt.AddFinalizer(registration.Dispose);
+            }
+
+        }
+
+        private class StreamConsumer {
+
+            private readonly StreamEventHandler<T> _handler;
+            internal HandlerRegistration<T> registration;
+
+            public StreamConsumer(StreamEventHandler<T> handler) {
+                _handler = handler;
+            }
+
+            public void Handle(T evt) {
+                var result = _handler.Invoke(evt);
+                if (result) {
+                    evt.AddFinalizer(registration.Dispose);
+                }
+            }
 
         }
 
@@ -134,21 +230,29 @@ namespace Spookline.SPC.Events {
 
     }
 
-    public struct HandlerRegistration<T> where T : EventBase {
+    public class HandlerRegistration<T> : IDisposable where T : Evt<T> {
 
         public int Priority { get; }
         public EventHandler<T> Handler { get; }
         public string DebugName { get; }
+        public EventReactor<T> Reactor { get; private set; }
 
-        public HandlerRegistration(int priority, EventHandler<T> handler, string debugName = "") {
+        public HandlerRegistration(EventReactor<T> reactor, int priority, EventHandler<T> handler,
+            string debugName) {
             Priority = priority;
             Handler = handler;
-            DebugName = debugName;
+            DebugName = debugName ?? "unknown";
+            Reactor = reactor;
+        }
+
+        public void Dispose() {
+            Reactor?.Unsubscribe(this);
+            Reactor = null;
         }
 
     }
 
-    public class HandlerRegistrationComparer<T> : IComparer<HandlerRegistration<T>> where T : EventBase {
+    public class HandlerRegistrationComparer<T> : IComparer<HandlerRegistration<T>> where T : Evt<T> {
 
         public int Compare(HandlerRegistration<T> x, HandlerRegistration<T> y) {
             return x.Priority.CompareTo(y.Priority);
@@ -158,14 +262,14 @@ namespace Spookline.SPC.Events {
 
     public static class VoidEventExtension {
 
-        public static readonly VoidEvent RecyclableEvent = new();
+        public static readonly VoidEvt RecyclableEvt = new();
 
         /// <summary>
         ///     Invokes the multicast event system.
         ///     See <see cref="EventReactor{T}" /> for details about required property attributes.
         /// </summary>
-        public static void Raise(this EventReactor<VoidEvent> reactor) {
-            reactor.Raise(RecyclableEvent);
+        public static void Raise(this EventReactor<VoidEvt> reactor) {
+            reactor.Raise(RecyclableEvt);
         }
 
         /// <summary>
@@ -177,16 +281,18 @@ namespace Spookline.SPC.Events {
         /// <param name="reactor">the reactor to subscribe to</param>
         /// <param name="obj">the instance of object which method shall be hooked</param>
         /// <param name="info">the method which shall be hooked</param>
-        public static object SubscribeAction(this EventReactor<VoidEvent> reactor, object obj, MethodInfo info) {
+        public static object SubscribeAction(this EventReactor<VoidEvt> reactor, object obj, MethodInfo info) {
             var action = DelegateUtils.CreateDelegate<Action>(obj, info);
-            EventHandler<VoidEvent> handler = _ => action.Invoke();
+            EventHandler<VoidEvt> handler = _ => action.Invoke();
             reactor.Subscribe(handler);
             return handler;
         }
 
     }
 
-    public delegate void EventHandler<in T>(T args) where T : EventBase;
+    public delegate void EventHandler<in T>(T args) where T : Evt<T>;
+
+    public delegate bool StreamEventHandler<in T>(T args) where T : Evt<T>;
 
     public interface IEventReactor {
 
@@ -194,7 +300,33 @@ namespace Spookline.SPC.Events {
         void RaiseUnsafe(object obj);
         object SubscribeUnsafe(object obj, MethodInfo info, int priority = 0);
         void UnsubscribeUnsafe(object subscription);
-        string GetDebugName(object subscription);
+        string ResolveDebugName(object subscription);
+        EventReactorInfo CreateInfo();
+
+    }
+
+    public class EventReactorInfo {
+
+        public string Name { get; set; }
+        public Type Type { get; set; }
+        public List<PriorityRow> Rows { get; set; } = new();
+
+        public class PriorityRow {
+
+            public int Priority { get; set; }
+            public List<string> Handlers { get; set; } = new();
+
+        }
+        public static string GetDebugName(Delegate handler) {
+            try {
+                var method = handler.Method;
+                var declaringType = method.DeclaringType;
+                var name = method.Name;
+                return $"{declaringType?.Name ?? "@"}.{name}";
+            } catch (MissingMemberException e) {
+                return "Private Method";
+            }
+        }
 
     }
 }
