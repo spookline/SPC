@@ -4,10 +4,11 @@ using Spookline.SPC.Ext;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SampleModule", menuName = "Modules/Sample Module")]
-public class SampleModule : Module {
+public class SampleModule : Module<SampleModule> {
 
     public override void Load() {
         base.Load();
+        Debug.Log($"SampleModule loaded");
     }
 
     public override void Unload() {

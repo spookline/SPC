@@ -11,7 +11,7 @@ namespace Spookline.SPC {
 
         public static Globals Instance { get; private set; }
 
-        public List<Module> modules;
+        public List<IModule> modules;
         public Dictionary<Type, ModuleInstance> ModulesByType { get; private set; } = new();
 
         public void ModdingEntrypoint() { }
@@ -23,7 +23,7 @@ namespace Spookline.SPC {
             ModdingEntrypoint();
             foreach (var module in modules) {
                 var instance = new ModuleInstance(module);
-                ModulesByType[module.GetType()] = instance;
+                ModulesByType[module.GetTypeDelegate()] = instance;
                 module.Load();
             }
         }
