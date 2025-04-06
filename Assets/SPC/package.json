@@ -1,10 +1,8 @@
 ﻿{
   "name": "com.spookline.spc",
-  "version": "0.2.0",
+  "version": "0.1.2",
   "displayName": "Spookline Core",
   "dependencies": {
-    "com.unity.addressables": "2.3.16",
-    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
-    "com.unity.nuget.newtonsoft-json": "3.2.1"
+    "com.unity.addressables": "2.3.16"
   }
 }
