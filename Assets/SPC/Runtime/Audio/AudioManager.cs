@@ -62,7 +62,7 @@ namespace Spookline.SPC.Audio {
         /// <param name="position">The optional position in world space where the audio should play. If null, the method will track a transform if provided.</param>
         /// <param name="tracked">The optional transform to be tracked during playback. If null, the method will use the specified position, if provided.</param>
         public void Play(AudioDef def, float spatialBlend, Vector3? position = null, Transform tracked = null) {
-            var clip = GetClip(def.audioAsset);
+            var clip = def.AsClip();
             var trackedObject = _pool.Get();
             trackedObject.source.clip = clip;
             trackedObject.source.spatialBlend = spatialBlend;
@@ -155,7 +155,7 @@ namespace Spookline.SPC.Audio {
 
     public readonly struct AudioDef {
 
-        public readonly string audioAsset;
+        public readonly string[] audioAsset;
         public readonly AudioGroupDef group;
         public readonly bool loop;
         public readonly float volume;
@@ -163,7 +163,7 @@ namespace Spookline.SPC.Audio {
         public readonly float minDistance;
         public readonly float maxDistance;
         
-        public AudioDef(string audioAsset, AudioGroupDef group = null, bool loop = false, float volume = 1f, float pitch = 1f, float minDistance = 1f,
+        public AudioDef(string[] audioAsset, AudioGroupDef group = null, bool loop = false, float volume = 1f, float pitch = 1f, float minDistance = 1f,
             float maxDistance = 15f) {
             this.audioAsset = audioAsset;
             this.group = group;
@@ -207,7 +207,11 @@ namespace Spookline.SPC.Audio {
         /// Returns null if the audio asset is not found in the <see cref="AudioManager"/>.
         /// </returns>
         public AudioClip AsClip() {
-            return AudioManager.Instance.GetClip(audioAsset);
+            return AudioManager.Instance.GetClip(GetRandomAudioAsset());
+        }
+        
+        public string GetRandomAudioAsset() {
+            return audioAsset.Length == 1 ? audioAsset[0] : audioAsset[UnityEngine.Random.Range(0, audioAsset.Length)];
         }
 
         /// <summary>
