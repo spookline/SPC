@@ -16,39 +16,39 @@ namespace Spookline.SPC.Audio {
     public class AudioManager : Singleton<AudioManager> {
 
         private readonly Dictionary<string, AudioClip> _clips = new();
-        private readonly ObjectPool<AudioTrackedObject> _pool;
+        private readonly ObjectPool<AudioHandle> _pool;
         
         internal AudioMixer Mixer => _mixer ??= Addressables.LoadAssetAsync<AudioMixer>("AudioMixer").WaitForCompletion();
         private AudioMixer _mixer;
 
         public AudioManager() {
             if (IsInitialized) return;
-            _pool = new ObjectPool<AudioTrackedObject>(OnPoolCreate, OnPoolGet, OnPoolRelease, OnPoolDestroy);
+            _pool = new ObjectPool<AudioHandle>(OnPoolCreate, OnPoolGet, OnPoolRelease, OnPoolDestroy);
         }
 
-        public void Release(AudioTrackedObject trackedObject) {
-            _pool.Release(trackedObject);
+        public void Release(AudioHandle handle) {
+            _pool.Release(handle);
         }
 
-        private static AudioTrackedObject OnPoolCreate() {
+        private static AudioHandle OnPoolCreate() {
             var sourceObject = new GameObject("PooledAudioSource");
             sourceObject.AddComponent<AudioSource>();
-            return sourceObject.AddComponent<AudioTrackedObject>();
+            return sourceObject.AddComponent<AudioHandle>();
         }
 
-        private static void OnPoolGet(AudioTrackedObject trackedObject) {
-            trackedObject.enabled = true;
-            trackedObject.source.enabled = true;
+        private static void OnPoolGet(AudioHandle handle) {
+            handle.enabled = true;
+            handle.source.enabled = true;
         }
 
-        private static void OnPoolRelease(AudioTrackedObject trackedObject) {
-            trackedObject.source.Stop();
-            trackedObject.source.enabled = false;
-            trackedObject.enabled = false;
+        private static void OnPoolRelease(AudioHandle handle) {
+            handle.source.Stop();
+            handle.source.enabled = false;
+            handle.enabled = false;
         }
 
-        private static void OnPoolDestroy(AudioTrackedObject trackedObject) {
-            Object.Destroy(trackedObject.gameObject);
+        private static void OnPoolDestroy(AudioHandle handle) {
+            Object.Destroy(handle.gameObject);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Spookline.SPC.Audio {
         /// <param name="spatialBlend">The spatial blend value where 0 is fully 2D and 1 is fully 3D.</param>
         /// <param name="position">The optional position in world space where the audio should play. If null, the method will track a transform if provided.</param>
         /// <param name="tracked">The optional transform to be tracked during playback. If null, the method will use the specified position, if provided.</param>
-        public void Play(AudioDef def, float spatialBlend, Vector3? position = null, Transform tracked = null) {
+        public AudioHandle Play(AudioDef def, float spatialBlend, Vector3? position = null, Transform tracked = null) {
             var clip = def.AsClip();
             var trackedObject = _pool.Get();
             trackedObject.source.clip = clip;
@@ -70,9 +70,10 @@ namespace Spookline.SPC.Audio {
             if (position.HasValue) {
                 trackedObject.transform.position = position.Value;
                 trackedObject.Play(position.Value);
-                return;
+                return trackedObject;
             }
             trackedObject.PlayTracked(tracked);
+            return trackedObject;
         }
 
         internal AudioClip GetClip(string asset) {
@@ -85,13 +86,18 @@ namespace Spookline.SPC.Audio {
 
     }
 
-    public class AudioTrackedObject : MonoBehaviour {
+    public class AudioHandle : MonoBehaviour {
+
+        public bool IsPlaying => source.isPlaying;
+        public bool HasEnded { get; private set; }
 
         [HideInInspector]
         public AudioSource source;
 
         [HideInInspector]
         public Transform tracked;
+        
+        public Action onEnd; 
 
         private bool _waitingForStart;
         private Transform _transform;
@@ -106,14 +112,14 @@ namespace Spookline.SPC.Audio {
                 _waitingForStart = false;
                 return;
             }
-
             if (tracked) {
                 _transform.position = tracked.position;
             }
-
-            if (!source.isPlaying && !_waitingForStart) {
-                AudioManager.Instance.Release(this);
-            }
+            if (source.isPlaying || _waitingForStart) return;
+            AudioManager.Instance.Release(this);
+            if (HasEnded) return;
+            HasEnded = true;
+            onEnd?.Invoke();
         }
 
 
@@ -121,6 +127,8 @@ namespace Spookline.SPC.Audio {
             _transform.position = position;
             _waitingForStart = true;
             tracked = null;
+            HasEnded = false;
+            onEnd = null;
             source.Play();
         }
 
@@ -128,6 +136,8 @@ namespace Spookline.SPC.Audio {
             this.tracked = tracked;
             _transform.position = tracked.position;
             _waitingForStart = true;
+            HasEnded = false;
+            onEnd = null;
             source.Play();
         }
 
@@ -194,8 +204,8 @@ namespace Spookline.SPC.Audio {
         /// The playback utilizes the settings defined in the <see cref="AudioDef"/> such as volume, pitch, and spatialization.
         /// If positional or transform tracking parameters are needed, consider using `PlayAt` or `PlayTracked` methods.
         /// </summary>
-        public void Play() {
-            PlayAt(Vector3.zero, 0f);
+        public AudioHandle Play() {
+            return PlayAt(Vector3.zero, 0f);
         }
 
         /// <summary>
@@ -219,8 +229,8 @@ namespace Spookline.SPC.Audio {
         /// </summary>
         /// <param name="position">The position in world space where the audio should be played.</param>
         /// <param name="spatialBlend">The spatial blend value where 0 is fully 2D and 1 is fully 3D. Defaults to 1f.</param>
-        public void PlayAt(Vector3 position, float spatialBlend = 1f) {
-            AudioManager.Instance.Play(this, spatialBlend, position);
+        public AudioHandle PlayAt(Vector3 position, float spatialBlend = 1f) {
+            return AudioManager.Instance.Play(this, spatialBlend, position);
         }
 
         /// <summary>
@@ -229,8 +239,8 @@ namespace Spookline.SPC.Audio {
         /// </summary>
         /// <param name="tracked">The transform to be tracked during audio playback. The audio will follow the position of this transform in real-time.</param>
         /// <param name="spatialBlend">The spatial blend value where 0 is fully 2D and 1 is fully 3D.</param>
-        public void PlayTracked(Transform tracked, float spatialBlend = 1f) {
-            AudioManager.Instance.Play(this, spatialBlend, null, tracked);
+        public AudioHandle PlayTracked(Transform tracked, float spatialBlend = 1f) {
+            return AudioManager.Instance.Play(this, spatialBlend, null, tracked);
         }
 
         /// <summary>
@@ -240,17 +250,12 @@ namespace Spookline.SPC.Audio {
         /// <param name="tracked">The object whose transform will be tracked during audio playback. Must be a <see cref="GameObject"/> or <see cref="Component"/>.</param>
         /// <param name="spatialBlend">The spatial blend value where 0 is fully 2D and 1 is fully 3D.</param>
         /// <exception cref="ArgumentException">Thrown if the tracked object is not of a supported type.</exception>
-        public void PlayTracked(Object tracked, float spatialBlend = 1f) {
-            switch (tracked) {
-                case GameObject go:
-                    PlayTracked(go.transform, spatialBlend);
-                    break;
-                case Component component:
-                    PlayTracked(component.transform, spatialBlend);
-                    break;
-                default:
-                    throw new ArgumentException("Invalid tracked object type.");
-            }
+        public AudioHandle PlayTracked(Object tracked, float spatialBlend = 1f) {
+            return tracked switch {
+                GameObject go => PlayTracked(go.transform, spatialBlend),
+                Component component => PlayTracked(component.transform, spatialBlend),
+                _ => throw new ArgumentException("Invalid tracked object type.")
+            };
         }
 
     }
