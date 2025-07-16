@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace Spookline.SPC.Events {
     public abstract class Evt<TSelf> : EvtBase where TSelf : Evt<TSelf> {
 
-        public void Raise() => EventReactor<TSelf>.Shared.Raise((TSelf)this);
+        public void Raise() {
+            EventReactor<TSelf>.Shared.Raise((TSelf)this);
+        }
 
         public static HandlerRegistration<TSelf> Subscribe(EventHandler<TSelf> action,
             int priority = 0, string debugName = null) {

@@ -1,20 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
-using Spookline.SPC.Events;
 using Spookline.SPC.Ext;
 using UnityEngine;
 
 namespace Spookline.SPC {
     public class Globals : MonoBehaviour {
 
-        public static Globals Instance { get; private set; }
-
         public List<IModule> modules;
-        public Dictionary<Type, ModuleInstance> ModulesByType { get; private set; } = new();
 
-        public void ModdingEntrypoint() { }
+        public static Globals Instance { get; private set; }
+        public Dictionary<Type, ModuleInstance> ModulesByType { get; } = new();
 
         // Start is called before the first frame update
         private void Awake() {
@@ -28,16 +23,16 @@ namespace Spookline.SPC {
             }
         }
 
+        // Update is called once per frame
+        private void Update() { }
+
         private void OnDestroy() {
-            foreach (var module in modules) {
-                module.Unload();
-            }
+            foreach (var module in modules) module.Unload();
 
             Instance = null;
         }
 
-        // Update is called once per frame
-        void Update() { }
-        
+        public void ModdingEntrypoint() { }
+
     }
 }

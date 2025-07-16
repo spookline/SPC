@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Spookline.SPC.Events {
     /// <summary>
@@ -16,11 +14,11 @@ namespace Spookline.SPC.Events {
 
         private static EventReactor<T> _globalReactor;
 
-        public static EventReactor<T> Shared => _globalReactor ??= EventManager.Instance.RegisterEvent<T>();
-
 
         private readonly HandlerRegistrationComparer<T> _comparer = new();
         private List<HandlerRegistration<T>> _registrations = new();
+
+        public static EventReactor<T> Shared => _globalReactor ??= EventManager.Instance.RegisterEvent<T>();
 
         /// <summary>
         ///     Returns the type of the generic <see cref="T" />.
@@ -205,9 +203,7 @@ namespace Spookline.SPC.Events {
 
             public void Handle(T evt) {
                 var result = _handler.Invoke(evt);
-                if (result) {
-                    evt.AddFinalizer(registration.Dispose);
-                }
+                if (result) evt.AddFinalizer(registration.Dispose);
             }
 
         }
@@ -232,11 +228,6 @@ namespace Spookline.SPC.Events {
 
     public class HandlerRegistration<T> : IDisposable where T : Evt<T> {
 
-        public int Priority { get; }
-        public EventHandler<T> Handler { get; }
-        public string DebugName { get; }
-        public EventReactor<T> Reactor { get; private set; }
-
         public HandlerRegistration(EventReactor<T> reactor, int priority, EventHandler<T> handler,
             string debugName) {
             Priority = priority;
@@ -244,6 +235,11 @@ namespace Spookline.SPC.Events {
             DebugName = debugName ?? "unknown";
             Reactor = reactor;
         }
+
+        public int Priority { get; }
+        public EventHandler<T> Handler { get; }
+        public string DebugName { get; }
+        public EventReactor<T> Reactor { get; private set; }
 
         public void Dispose() {
             Reactor?.Unsubscribe(this);
@@ -311,12 +307,6 @@ namespace Spookline.SPC.Events {
         public Type Type { get; set; }
         public List<PriorityRow> Rows { get; set; } = new();
 
-        public class PriorityRow {
-
-            public int Priority { get; set; }
-            public List<string> Handlers { get; set; } = new();
-
-        }
         public static string GetDebugName(Delegate handler) {
             try {
                 var method = handler.Method;
@@ -326,6 +316,13 @@ namespace Spookline.SPC.Events {
             } catch (MissingMemberException e) {
                 return "Private Method";
             }
+        }
+
+        public class PriorityRow {
+
+            public int Priority { get; set; }
+            public List<string> Handlers { get; set; } = new();
+
         }
 
     }

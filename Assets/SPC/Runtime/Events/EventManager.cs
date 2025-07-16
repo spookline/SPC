@@ -13,9 +13,7 @@ namespace Spookline.SPC.Events {
         /// </summary>
         /// <typeparam name="T">type of the reactor which shall be subscribed</typeparam>
         public EventReactor<T> RegisterEvent<T>() where T : Evt<T> {
-            if (Reactors.TryGetValue(typeof(T), out var eventReactor)) {
-                return (EventReactor<T>)eventReactor;
-            }
+            if (Reactors.TryGetValue(typeof(T), out var eventReactor)) return (EventReactor<T>)eventReactor;
 
             var reactor = new EventReactor<T>();
             Reactors[typeof(T)] = reactor;
@@ -26,9 +24,7 @@ namespace Spookline.SPC.Events {
         ///     Registers an event reactor.
         /// </summary>
         public void RegisterEvent(IEventReactor reactor) {
-            if (Reactors.ContainsKey(reactor.TypeDelegate())) {
-                return;
-            }
+            if (Reactors.ContainsKey(reactor.TypeDelegate())) return;
 
             Reactors[reactor.TypeDelegate()] = reactor;
         }

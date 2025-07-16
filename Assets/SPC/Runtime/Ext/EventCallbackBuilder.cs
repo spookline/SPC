@@ -1,7 +1,6 @@
 using Spookline.SPC.Events;
 
-namespace Spookline.SPC.Ext
-{
+namespace Spookline.SPC.Ext {
     public readonly struct EventCallbackBuilder<T> where T : Evt<T> {
 
         private readonly IDisposableContainer _container;
@@ -10,7 +9,7 @@ namespace Spookline.SPC.Ext
             _container = container;
         }
 
-        public HandlerRegistration<T> Do(Events.EventHandler<T> action, int priority = 0, string debugName = null) {
+        public HandlerRegistration<T> Do(EventHandler<T> action, int priority = 0, string debugName = null) {
 #if DEBUG
             if (debugName == null) {
                 var clazz = _container.GetType().FullName;
@@ -24,7 +23,7 @@ namespace Spookline.SPC.Ext
             return registration;
         }
 
-        public HandlerRegistration<T> Stream(Events.StreamEventHandler<T> action, int priority = 0,
+        public HandlerRegistration<T> Stream(StreamEventHandler<T> action, int priority = 0,
             string debugName = null) {
 #if DEBUG
             if (debugName == null) {
@@ -38,7 +37,7 @@ namespace Spookline.SPC.Ext
             return registration;
         }
 
-        public HandlerRegistration<T> DoOnce(Events.EventHandler<T> action, int priority = 0, string debugName = null) {
+        public HandlerRegistration<T> DoOnce(EventHandler<T> action, int priority = 0, string debugName = null) {
 #if DEBUG
             if (debugName == null) {
                 var clazz = _container.GetType().FullName;

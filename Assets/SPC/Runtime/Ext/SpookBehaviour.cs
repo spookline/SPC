@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Spookline.SPC.Events;
 using UnityEngine;
 
@@ -11,13 +9,7 @@ namespace Spookline.SPC.Ext {
         private readonly List<IDisposable> _disposables = new();
 
         protected virtual void OnDestroy() {
-            foreach (var disposable in _disposables) {
-                disposable.Dispose();
-            }
-        }
-
-        public EventCallbackBuilder<T> On<T>() where T : Evt<T> {
-            return new EventCallbackBuilder<T>(this);
+            foreach (var disposable in _disposables) disposable.Dispose();
         }
 
         public void DisposeOnDestroy(IDisposable disposable) {
@@ -27,6 +19,11 @@ namespace Spookline.SPC.Ext {
         public void RemoveOnDestroyDisposal(IDisposable disposable) {
             _disposables.Remove(disposable);
         }
+
+        public EventCallbackBuilder<T> On<T>() where T : Evt<T> {
+            return new EventCallbackBuilder<T>(this);
+        }
+
     }
 
     public interface IDisposableContainer {

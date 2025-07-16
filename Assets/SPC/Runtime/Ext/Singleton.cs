@@ -2,8 +2,8 @@
 
 namespace Spookline.SPC {
     /// <summary>
-    /// Provides a generic implementation of the Singleton design pattern.
-    /// Ensures that only one instance of the given type <typeparamref name="T"/> can exist.
+    ///     Provides a generic implementation of the Singleton design pattern.
+    ///     Ensures that only one instance of the given type <typeparamref name="T" /> can exist.
     /// </summary>
     /// <typeparam name="T">The type of the class that will implement the Singleton pattern.</typeparam>
     public abstract class Singleton<T> {
