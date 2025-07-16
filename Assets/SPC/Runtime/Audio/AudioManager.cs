@@ -6,6 +6,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
 using UnityEngine.Pool;
 using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace Spookline.SPC.Audio {
     /// <summary>
@@ -17,13 +18,29 @@ namespace Spookline.SPC.Audio {
 
         private readonly Dictionary<string, AudioClip> _clips = new();
         private readonly ObjectPool<AudioHandle> _pool;
-        
-        internal AudioMixer Mixer => _mixer ??= Addressables.LoadAssetAsync<AudioMixer>("AudioMixer").WaitForCompletion();
+
+        internal AudioMixer Mixer =>
+            _mixer ??= Addressables.LoadAssetAsync<AudioMixer>("AudioMixer").WaitForCompletion();
+
         private AudioMixer _mixer;
 
         public AudioManager() {
             if (IsInitialized) return;
             _pool = new ObjectPool<AudioHandle>(OnPoolCreate, OnPoolGet, OnPoolRelease, OnPoolDestroy);
+        }
+
+        /// <summary>
+        /// Change mixer group volume
+        /// </summary>
+        /// <param name="param">e.g MasterVolume, SfxVolume</param>
+        /// <param name="value">Percentage</param>
+        public void ChangeMixerVolume(string param, float value) {
+            if (value <= 0) {
+                Mixer.SetFloat(param, -80f);
+                return;
+            }
+
+            Mixer.SetFloat(param, Mathf.Log10(value) * 20f);
         }
 
         public void Release(AudioHandle handle) {
@@ -72,6 +89,7 @@ namespace Spookline.SPC.Audio {
                 trackedObject.Play(position.Value);
                 return trackedObject;
             }
+
             trackedObject.PlayTracked(tracked);
             return trackedObject;
         }
@@ -96,8 +114,8 @@ namespace Spookline.SPC.Audio {
 
         [HideInInspector]
         public Transform tracked;
-        
-        public Action onEnd; 
+
+        public Action onEnd;
 
         private bool _waitingForStart;
         private Transform _transform;
@@ -112,9 +130,11 @@ namespace Spookline.SPC.Audio {
                 _waitingForStart = false;
                 return;
             }
+
             if (tracked) {
                 _transform.position = tracked.position;
             }
+
             if (source.isPlaying || _waitingForStart) return;
             AudioManager.Instance.Release(this);
             if (HasEnded) return;
@@ -154,13 +174,16 @@ namespace Spookline.SPC.Audio {
     public class AudioGroupDef {
 
         private readonly string _path;
+
         public AudioGroupDef(string path) {
             _path = path;
         }
 
         public AudioMixerGroup MixerGroup =>
             _mixerGroup ??= AudioManager.Instance.Mixer.FindMatchingGroups(_path).First();
+
         private AudioMixerGroup _mixerGroup;
+
     }
 
     public readonly struct AudioDef {
@@ -172,8 +195,9 @@ namespace Spookline.SPC.Audio {
         public readonly float pitch;
         public readonly float minDistance;
         public readonly float maxDistance;
-        
-        public AudioDef(string[] audioAsset, AudioGroupDef group = null, bool loop = false, float volume = 1f, float pitch = 1f, float minDistance = 1f,
+
+        public AudioDef(string[] audioAsset, AudioGroupDef group = null, bool loop = false, float volume = 1f,
+            float pitch = 1f, float minDistance = 1f,
             float maxDistance = 15f) {
             this.audioAsset = audioAsset;
             this.group = group;
@@ -191,7 +215,7 @@ namespace Spookline.SPC.Audio {
         }
 
         internal void Apply(AudioSource source) {
-            if(group != null) source.outputAudioMixerGroup = group.MixerGroup;
+            if (group != null) source.outputAudioMixerGroup = group.MixerGroup;
             source.volume = volume;
             source.pitch = pitch;
             source.minDistance = minDistance;
@@ -219,9 +243,9 @@ namespace Spookline.SPC.Audio {
         public AudioClip AsClip() {
             return AudioManager.Instance.GetClip(GetRandomAudioAsset());
         }
-        
+
         public string GetRandomAudioAsset() {
-            return audioAsset.Length == 1 ? audioAsset[0] : audioAsset[UnityEngine.Random.Range(0, audioAsset.Length)];
+            return audioAsset.Length == 1 ? audioAsset[0] : audioAsset[Random.Range(0, audioAsset.Length)];
         }
 
         /// <summary>
