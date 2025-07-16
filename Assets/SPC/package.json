@@ -3,6 +3,7 @@
   "version": "0.1.4",
   "displayName": "Spookline Core",
   "dependencies": {
-    "com.unity.addressables": "2.3.16"
+    "com.unity.addressables": "2.3.16",
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
   }
 }
