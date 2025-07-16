@@ -28,6 +28,20 @@ namespace Spookline.SPC.Audio {
             if (IsInitialized) return;
             _pool = new ObjectPool<AudioHandle>(OnPoolCreate, OnPoolGet, OnPoolRelease, OnPoolDestroy);
         }
+        
+        /// <summary>
+        /// Generates a range of audio paths based on a prefix and an amount.
+        /// </summary>
+        /// <param name="prefix"></param>
+        /// <param name="amount"></param>
+        /// <returns></returns>
+        public static string[] GenerateRangedPaths(string prefix, int amount) {
+            var paths = new string[amount];
+            for (var i = 0; i < amount; i++) {
+                paths[i] = $"{prefix}_{i + 1}";
+            }
+            return paths;
+        }
 
         /// <summary>
         /// Change mixer group volume
@@ -43,10 +57,7 @@ namespace Spookline.SPC.Audio {
             Mixer.SetFloat(param, Mathf.Log10(value) * 20f);
         }
 
-        public void Release(AudioHandle handle) {
-            _pool.Release(handle);
-        }
-
+        #region Pool Callbacks
         private static AudioHandle OnPoolCreate() {
             var sourceObject = new GameObject("PooledAudioSource");
             sourceObject.AddComponent<AudioSource>();
@@ -67,6 +78,7 @@ namespace Spookline.SPC.Audio {
         private static void OnPoolDestroy(AudioHandle handle) {
             Object.Destroy(handle.gameObject);
         }
+        #endregion
 
         /// <summary>
         /// Plays an audio clip using the specified configuration, spatial properties, and optional position or tracking.
@@ -100,6 +112,10 @@ namespace Spookline.SPC.Audio {
             }
 
             return _clips[asset];
+        }
+        
+        internal void Release(AudioHandle handle) {
+            _pool.Release(handle);
         }
 
     }
@@ -207,7 +223,7 @@ namespace Spookline.SPC.Audio {
             this.minDistance = minDistance;
             this.maxDistance = maxDistance;
         }
-
+        
         public AudioDef With(bool? loop = null, float? volume = null, float? pitch = null,
             float? minDistance = null, float? maxDistance = null) {
             return new AudioDef(audioAsset, group, loop ?? this.loop, volume ?? this.volume, pitch ?? this.pitch,
