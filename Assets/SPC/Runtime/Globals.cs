@@ -6,7 +6,8 @@ using UnityEngine;
 namespace Spookline.SPC {
     public class Globals : MonoBehaviour {
 
-        public List<IModule> modules;
+        [SerializeField]
+        public List<Module> modules;
 
         public static Globals Instance { get; private set; }
         public Dictionary<Type, ModuleInstance> ModulesByType { get; } = new();
