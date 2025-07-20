@@ -6,7 +6,7 @@ public class AudioTest : MonoBehaviour {
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Space)) {
-            Play();
+            AudioDefs.Fart.Play();
         }
     }
 

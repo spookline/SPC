@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60f6ae9943dfb384091828a187ca70c6
+    m_Address: Ambience
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b6fba65696d30a44292c7978802fa632
     m_Address: AudioMixer
     m_ReadOnly: 0

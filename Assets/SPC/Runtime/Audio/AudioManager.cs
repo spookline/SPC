@@ -150,14 +150,14 @@ namespace Spookline.SPC.Audio {
         }
 
         private void Update() {
-            if (_waitingForStart && source.isPlaying) {
+            if (_waitingForStart && source.time > 0) {
                 _waitingForStart = false;
                 return;
             }
 
             if (tracked) _transform.position = tracked.position;
 
-            if (source.isPlaying || _waitingForStart) return;
+            if (source.time > 0 || _waitingForStart) return;
             AudioManager.Instance.Release(this);
             if (HasEnded) return;
             HasEnded = true;

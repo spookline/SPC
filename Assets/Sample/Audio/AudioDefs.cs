@@ -6,6 +6,7 @@ namespace Sample.Audio {
         public static readonly AudioGroupDef Sfx = new("Master/SFX");
 
         public static AudioDef Fart = new(new [] {"fart"}, Sfx);
+        public static AudioDef Ambience = new(new [] {"Ambience"}, Sfx);
 
     }
 }
