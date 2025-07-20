@@ -11,6 +11,7 @@ namespace Spookline.SPC.Ext {
 
         public override void Load() {
             if (Instance != null) Debug.LogError($"Instance of {typeof(TSelf).Name} already exists.");
+            Instance = (TSelf)this;
         }
 
         public override void Unload() {
