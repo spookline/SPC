@@ -13,9 +13,7 @@ namespace Spookline.SPC.Events {
     public class EventReactor<T> : IEventReactor where T : Evt<T> {
 
         private static EventReactor<T> _globalReactor;
-
-
-        private readonly HandlerRegistrationComparer<T> _comparer = new();
+        
         private List<HandlerRegistration<T>> _registrations = new();
 
         public static EventReactor<T> Shared => _globalReactor ??= EventManager.Instance.RegisterEvent<T>();
