@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
@@ -24,6 +25,9 @@ namespace Spookline.SPC.Audio {
         public AudioManager() {
             if (IsInitialized) return;
             _pool = new ObjectPool<AudioHandle>(OnPoolCreate, OnPoolGet, OnPoolRelease, OnPoolDestroy);
+            SceneManager.sceneUnloaded += _ => {
+                _pool.Clear();
+            };
         }
 
         internal AudioMixer Mixer =>
