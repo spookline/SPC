@@ -245,6 +245,7 @@ namespace Spookline.SPC.Audio {
             source.pitch = pitch;
             source.minDistance = minDistance;
             source.maxDistance = maxDistance;
+            source.rolloffMode = AudioRolloffMode.Linear;
             source.loop = loop;
         }
 
