@@ -153,6 +153,10 @@ namespace Spookline.SPC.Audio {
             source = GetComponent<AudioSource>();
         }
 
+        private void OnDestroy() {
+            AudioManager.Instance.Release(this);
+        }
+
         private void Update() {
             if (_waitingForStart && source.time > 0) {
                 _waitingForStart = false;
