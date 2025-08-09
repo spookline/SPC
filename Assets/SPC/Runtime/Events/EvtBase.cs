@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 
 namespace Spookline.SPC.Events {
     public abstract class Evt<TSelf> : EvtBase where TSelf : Evt<TSelf> {
 
-        public void Raise() {
+        public TSelf Raise() {
             EventReactor<TSelf>.Shared.Raise((TSelf)this);
+            return (TSelf)this;
         }
 
         public static HandlerRegistration<TSelf> Subscribe(EventHandler<TSelf> action,
@@ -30,6 +32,26 @@ namespace Spookline.SPC.Events {
             debugName ??= EventReactorInfo.GetDebugName(action);
 #endif
             return EventReactor<TSelf>.Shared.SubscribeStream(action, priority, debugName);
+        }
+
+    }
+
+    public abstract class AsyncChainEvt<TSelf> : Evt<TSelf> where TSelf : AsyncChainEvt<TSelf> {
+
+        private readonly LinkedList<Func<UniTask>> _chain = new();
+        
+        public event Func<UniTask> Chain {
+            add => _chain.AddLast(value);
+            remove => throw new NotSupportedException();
+        }
+        
+        public async UniTask<TSelf> RaiseAsync() {
+            Raise();
+            foreach (var action in _chain) {
+                if (action == null) continue;
+                await action.Invoke();
+            }
+            return (TSelf)this;
         }
 
     }

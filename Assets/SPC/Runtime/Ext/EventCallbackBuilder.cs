@@ -1,3 +1,5 @@
+using System;
+using Cysharp.Threading.Tasks;
 using Spookline.SPC.Events;
 
 namespace Spookline.SPC.Ext {
@@ -9,7 +11,7 @@ namespace Spookline.SPC.Ext {
             _container = container;
         }
 
-        public HandlerRegistration<T> Do(EventHandler<T> action, int priority = 0, string debugName = null) {
+        public HandlerRegistration<T> Do(Events.EventHandler<T> action, int priority = 0, string debugName = null) {
 #if DEBUG
             if (debugName == null) {
                 var clazz = _container.GetType().FullName;
@@ -37,7 +39,7 @@ namespace Spookline.SPC.Ext {
             return registration;
         }
 
-        public HandlerRegistration<T> DoOnce(EventHandler<T> action, int priority = 0, string debugName = null) {
+        public HandlerRegistration<T> DoOnce(Events.EventHandler<T> action, int priority = 0, string debugName = null) {
 #if DEBUG
             if (debugName == null) {
                 var clazz = _container.GetType().FullName;
@@ -48,6 +50,20 @@ namespace Spookline.SPC.Ext {
             var registration = EventReactor<T>.Shared.SubscribeOnce(action, priority, debugName);
             _container.DisposeOnDestroy(registration);
             return registration;
+        }
+
+    }
+
+
+    public static class EventCallbackBuilderExtensions {
+
+        public static HandlerRegistration<T> Do<T>(this EventCallbackBuilder<T> builder, Func<T, UniTask> action,
+            int priority = 0, string debugName = null) where T : Evt<T> =>
+            builder.Do(evt => { action(evt).Forget(); }, priority, debugName);
+
+        public static HandlerRegistration<T> AsyncDo<T>(this EventCallbackBuilder<T> builder, Func<T, UniTask> action,
+            int priority = 0, string debugName = null) where T : AsyncChainEvt<T> {
+            return builder.Do(evt => { evt.Chain += async () => { await action(evt); }; }, priority, debugName);
         }
 
     }

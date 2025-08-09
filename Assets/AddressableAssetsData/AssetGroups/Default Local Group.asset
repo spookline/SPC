@@ -20,8 +20,14 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 413e9254fac53d145b523f016a3d1dd5
+    m_Address: Assets/Sample/Audio/AudioA.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - audio
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 60f6ae9943dfb384091828a187ca70c6
-    m_Address: Ambience
+    m_Address: drone
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -29,6 +35,12 @@ MonoBehaviour:
     m_Address: AudioMixer
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d3a83adcaf3fdc94987262e13a97e90a
+    m_Address: Assets/Sample/Audio/AudioB.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - audio
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0b880d00e72589b4b9e0e4f3c008aeac, type: 2}

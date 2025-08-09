@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
+using Sirenix.Serialization;
 using Spookline.SPC.Events;
 using UnityEngine;
 
@@ -48,6 +50,22 @@ namespace Spookline.SPC.Ext {
 
         public EventCallbackBuilder<T> On<T>() where T : Evt<T> {
             return new EventCallbackBuilder<T>(this);
+        }
+    }
+    
+    [ShowOdinSerializedPropertiesInInspector]
+    public abstract class OdinModule<T> : Module<T>, ISerializationCallbackReceiver where T: OdinModule<T> {
+        [SerializeField, HideInInspector]
+        private SerializationData serializationData;
+
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            UnitySerializationUtility.DeserializeUnityObject(this, ref serializationData);
+        }
+
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        {
+            UnitySerializationUtility.SerializeUnityObject(this, ref serializationData);
         }
     }
 
