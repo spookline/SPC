@@ -3,29 +3,39 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using Sirenix.OdinInspector;
+using Spookline.SPC.Ext;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Spookline.SPC.Registry {
     public abstract class RegistryObject : SerializedScriptableObject {
 
+        [HideInInspector]
         public string assetGuid;
 
         protected override void OnBeforeSerialize() {
             base.OnBeforeSerialize();
 #if UNITY_EDITOR
-            UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(GetInstanceID(), out assetGuid, out _);
+            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(GetInstanceID(), out assetGuid, out _);
 #endif
         }
 
     }
 
-    public abstract class ObjectRegistry<TSelf, TObject> : Singleton<TSelf>, IDisposable
+    public interface IObjectRegistry {
+
+        public string AddressableLabel { get; }
+
+        public Type GetObjectType();
+
+    }
+
+    public abstract class ObjectRegistry<TSelf, TObject> : Singleton<TSelf>, IDisposable, IObjectRegistry
         where TObject : RegistryObject {
 
-        public abstract string AddressableLabel { get; }
+        private readonly List<Action> _disposeActions = new();
 
         public IReadOnlyList<TObject> Objects { get; private set; } = new List<TObject>();
 
@@ -37,13 +47,34 @@ namespace Spookline.SPC.Registry {
 
         public Dictionary<Enum, TObject> EnumLookup { get; } = new();
 
-        private List<Action> _disposeActions = new();
+        public void Dispose() {
+            foreach (var action in _disposeActions) action.Invoke();
+            GuidLookup = null;
+            Objects = null;
+        }
 
-        public TObject GetByGuid(string guid) => GuidLookup.GetValueOrDefault(guid);
-        public bool TryGetByGuid(string guid, out TObject obj) => GuidLookup.TryGetValue(guid, out obj);
-        public TObject GetByEnum(Enum key) => EnumLookup.GetValueOrDefault(key);
-        public TObject GetByName(string name) => NameLookup.GetValueOrDefault(name);
-        
+        public abstract string AddressableLabel { get; }
+
+        public Type GetObjectType() {
+            return typeof(TObject);
+        }
+
+        public TObject GetByGuid(string guid) {
+            return GuidLookup.GetValueOrDefault(guid);
+        }
+
+        public bool TryGetByGuid(string guid, out TObject obj) {
+            return GuidLookup.TryGetValue(guid, out obj);
+        }
+
+        public TObject GetByEnum(Enum key) {
+            return EnumLookup.GetValueOrDefault(key);
+        }
+
+        public TObject GetByName(string name) {
+            return NameLookup.GetValueOrDefault(name);
+        }
+
         protected virtual UniTask BeforeLoad() {
             return UniTask.CompletedTask;
         }
@@ -99,18 +130,11 @@ namespace Spookline.SPC.Registry {
             foreach (var value in Enum.GetValues(enumType)) {
                 var name = Enum.GetName(enumType, value);
                 if (name == null) continue;
-                if (NameLookup.TryGetValue(name, out var obj)) {
+                if (NameLookup.TryGetValue(name, out var obj))
                     EnumLookup[(Enum)value] = obj;
-                } else {
+                else
                     Debug.LogWarning($"Enum value '{name}' not found in registry for type '{enumType.Name}'.");
-                }
             }
-        }
-
-        public void Dispose() {
-            foreach (var action in _disposeActions) action.Invoke();
-            GuidLookup = null;
-            Objects = null;
         }
 
     }

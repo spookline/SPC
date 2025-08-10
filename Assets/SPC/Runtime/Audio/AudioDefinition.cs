@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
@@ -10,6 +9,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using Random = UnityEngine.Random;
 
 namespace Spookline.SPC.Audio {
     [CreateAssetMenu(fileName = "AudioDefinition", menuName = "Spookline/AudioDefinition", order = 1)]
@@ -17,15 +17,20 @@ namespace Spookline.SPC.Audio {
 
         public AudioMixerGroup group;
 
-        [BoxGroup("Default Audio Options"), HideLabel]
+        [BoxGroup("Default Audio Options")]
+        [HideLabel]
         public AudioOptions options = AudioOptions.Default;
 
-        [Title("Provider"), PolymorphicDrawerSettings(ShowBaseType = false), HideLabel, InlineProperty]
+        [Title("Provider")]
+        [PolymorphicDrawerSettings(ShowBaseType = false)]
+        [HideLabel]
+        [InlineProperty]
         public IAudioSourceProvider provider;
 
     }
 
-    [Serializable, StructLayout(LayoutKind.Sequential)]
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
     public struct AudioOptions {
 
@@ -47,25 +52,27 @@ namespace Spookline.SPC.Audio {
             this.volume = volume;
             return this;
         }
+
         public AudioOptions Loop(bool loop = true) {
             this.loop = loop;
             return this;
         }
+
         public AudioOptions Pitch(float pitch) {
             this.pitch = pitch;
             return this;
         }
-        
+
         public AudioOptions MinDistance(float minDistance) {
             this.minDistance = minDistance;
             return this;
         }
-        
+
         public AudioOptions MaxDistance(float maxDistance) {
             this.maxDistance = maxDistance;
             return this;
         }
-        
+
 
         public readonly void ApplyTo(AudioSource source) {
             source.loop = loop;
@@ -113,11 +120,13 @@ namespace Spookline.SPC.Audio {
             return new AudioJob(definition, data, newOptions);
         }
 
-        public SerializedAudioJob Serialize() => new() {
-            guid = definition.assetGuid,
-            data = data,
-            options = options
-        };
+        public SerializedAudioJob Serialize() {
+            return new SerializedAudioJob {
+                guid = definition.assetGuid,
+                data = data,
+                options = options
+            };
+        }
 
         public void Play() {
             SpookAudioModule.Instance.Play(this).Forget();
@@ -155,14 +164,12 @@ namespace Spookline.SPC.Audio {
         public List<AudioAssetEntry> clips = new();
 
         [NonSerialized]
-        private List<AudioClip> _loadedClips;
-
-        [NonSerialized]
         private List<AsyncOperationHandle> _handles;
 
-        public bool IsLoaded { get; private set; }
+        [NonSerialized]
+        private List<AudioClip> _loadedClips;
 
-        // ReSharper disable Unity.PerformanceAnalysis
+        public bool IsLoaded { get; private set; } // ReSharper disable Unity.PerformanceAnalysis
         public async UniTask Load() {
             if (IsLoaded) {
                 Debug.LogWarning("AudioSourceProvider is already loaded.");
@@ -189,9 +196,9 @@ namespace Spookline.SPC.Audio {
         }
 
         public UniTask Unload() {
-            foreach (var handle in _handles) {
-                if (handle.IsValid()) Addressables.Release(handle);
-            }
+            foreach (var handle in _handles)
+                if (handle.IsValid())
+                    Addressables.Release(handle);
 
             _loadedClips?.Clear();
             _handles?.Clear();
@@ -205,7 +212,7 @@ namespace Spookline.SPC.Audio {
                 case 1:
                     return new AudioJob(definition, 0, definition.options);
                 case > 1: {
-                    var randomIndex = UnityEngine.Random.Range(0, _loadedClips.Count);
+                    var randomIndex = Random.Range(0, _loadedClips.Count);
                     return new AudioJob(definition, randomIndex, definition.options);
                 }
                 default:

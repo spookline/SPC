@@ -23,10 +23,6 @@ namespace Spookline.SPC.Audio {
             source = GetComponent<AudioSource>();
         }
 
-        private void OnDestroy() {
-            AudioManager.Instance.Release(this);
-        }
-
         private void Update() {
             if (_waitingForStart && source.time > 0) {
                 _waitingForStart = false;
@@ -40,6 +36,10 @@ namespace Spookline.SPC.Audio {
             if (HasEnded) return;
             HasEnded = true;
             onEnd?.Invoke();
+        }
+
+        private void OnDestroy() {
+            AudioManager.Instance.Release(this);
         }
 
 

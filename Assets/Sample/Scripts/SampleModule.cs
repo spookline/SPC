@@ -14,7 +14,7 @@ public class SampleModule : Module<SampleModule> {
         base.Load();
         Debug.Log($"SampleModule loaded"); 
         SpookAudioRegistry.Instance.Load(typeof(AudioKeys)).Forget();
-
+        
         On<GlobalStartEvt>().AsyncDo(ChainFirst);
         On<GlobalStartEvt>().AsyncDo(ChainSecond, priority: 10);
     }

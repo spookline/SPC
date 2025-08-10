@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace Spookline.SPC.Ext {
     public abstract class Module<TSelf> : Module where TSelf : Module<TSelf> {
+
         public static bool HasInstance => Instance;
         public static TSelf Instance { get; private set; }
-        
+
 
         public override void Load() {
             if (Instance != null) Debug.LogError($"Instance of {typeof(TSelf).Name} already exists.");
@@ -24,12 +25,13 @@ namespace Spookline.SPC.Ext {
         public override Type GetTypeDelegate() {
             return typeof(TSelf);
         }
+
     }
 
     public abstract class Module : ScriptableObject, IModule, IDisposableContainer {
-        
+
         private readonly List<IDisposable> _disposables = new();
-        
+
         public void DisposeOnDestroy(IDisposable disposable) {
             _disposables.Add(disposable);
         }
@@ -51,22 +53,24 @@ namespace Spookline.SPC.Ext {
         public EventCallbackBuilder<T> On<T>() where T : Evt<T> {
             return new EventCallbackBuilder<T>(this);
         }
+
     }
-    
+
     [ShowOdinSerializedPropertiesInInspector]
-    public abstract class OdinModule<T> : Module<T>, ISerializationCallbackReceiver where T: OdinModule<T> {
-        [SerializeField, HideInInspector]
+    public abstract class OdinModule<T> : Module<T>, ISerializationCallbackReceiver where T : OdinModule<T> {
+
+        [SerializeField]
+        [HideInInspector]
         private SerializationData serializationData;
 
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
+        void ISerializationCallbackReceiver.OnAfterDeserialize() {
             UnitySerializationUtility.DeserializeUnityObject(this, ref serializationData);
         }
 
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
+        void ISerializationCallbackReceiver.OnBeforeSerialize() {
             UnitySerializationUtility.SerializeUnityObject(this, ref serializationData);
         }
+
     }
 
     public interface IModule {

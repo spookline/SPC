@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Spookline.SPC {
+namespace Spookline.SPC.Ext {
     /// <summary>
     ///     Provides a generic implementation of the Singleton design pattern.
     ///     Ensures that only one instance of the given type <typeparamref name="T" /> can exist.

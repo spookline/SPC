@@ -1,5 +1,4 @@
 using UnityEditor;
-using UnityEngine;
 
 namespace Spookline.SPC.Editor {
     [CustomEditor(typeof(Globals))]
@@ -7,7 +6,7 @@ namespace Spookline.SPC.Editor {
 
         public override void OnInspectorGUI() {
             base.OnInspectorGUI();
-   
         }
+
     }
 }

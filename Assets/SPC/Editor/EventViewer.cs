@@ -1,32 +1,25 @@
 using System.Linq;
 using Spookline.SPC.Events;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Spookline.SPC.Editor {
     public class EventViewer : EditorWindow {
 
-        [MenuItem("Window/Event Viewer")]
-        public static void ShowWindow() {
-            GetWindow<EventViewer>("Event Viewer");
-        }
-
-
         private void CreateGUI() {
             var types = EventManager.Instance.Reactors.Keys.Select(x => x.FullName).ToList();
             var dropdown = new DropdownField(types, types.FirstOrDefault());
             rootVisualElement.Add(dropdown);
 
-            var view = new VisualElement() {
+            var view = new VisualElement {
                 style = {
                     flexDirection = FlexDirection.Column,
                     flexGrow = 1,
                     paddingBottom = 8,
                     paddingTop = 8,
                     paddingLeft = 8,
-                    paddingRight = 8,
+                    paddingRight = 8
                 }
             };
             if (types.Count > 0) {
@@ -42,16 +35,17 @@ namespace Spookline.SPC.Editor {
             rootVisualElement.Add(view);
         }
 
+        [MenuItem("Window/Event Viewer")]
+        public static void ShowWindow() {
+            GetWindow<EventViewer>("Event Viewer");
+        }
+
         public VisualElement BuildVisualization(string eventName) {
             var scrollView = new ScrollView();
             var eventReactor = EventManager.Instance.Reactors.FirstOrDefault(x => x.Key.FullName == eventName).Value;
             var info = eventReactor.CreateInfo();
             var yHeight = 64;
-            var column = new VisualElement() {
-                style = {
-                    flexDirection = FlexDirection.Column,
-                }
-            };
+            var column = new VisualElement { style = { flexDirection = FlexDirection.Column } };
             foreach (var eventInfo in info.Rows) {
                 var priorityLabel = new Label("Priority: " + eventInfo.Priority) {
                     style = {
@@ -62,7 +56,7 @@ namespace Spookline.SPC.Editor {
 
                 column.Add(priorityLabel);
 
-                var row = new VisualElement() {
+                var row = new VisualElement {
                     style = {
                         flexDirection = FlexDirection.Row,
                         height = yHeight,
@@ -71,14 +65,13 @@ namespace Spookline.SPC.Editor {
                 };
 
                 foreach (var handler in eventInfo.Handlers) {
-                    var handlerLabel = new Label(handler.ToString()) {
+                    var handlerLabel = new Label(handler) {
                         style = {
                             width = 300,
                             height = yHeight,
                             backgroundColor = new Color(0, 0, 0, 0.2f),
                             color = Color.white,
                             whiteSpace = WhiteSpace.Normal,
-
                             marginRight = 8,
                             borderTopLeftRadius = 8,
                             borderTopRightRadius = 8,
@@ -94,7 +87,7 @@ namespace Spookline.SPC.Editor {
                             borderLeftColor = new Color(0, 0, 0, 0.1f),
                             borderRightColor = new Color(0, 0, 0, 0.1f),
                             borderTopColor = new Color(0, 0, 0, 0.1f),
-                            borderBottomColor = new Color(0, 0, 0, 0.1f),
+                            borderBottomColor = new Color(0, 0, 0, 0.1f)
                         }
                     };
                     row.Add(handlerLabel);

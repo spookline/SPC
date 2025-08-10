@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 948aa89fffa947c79d6d163b7105a7b0, type: 3}
+  m_Name: Fart
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: provider
+      Entry: 7
+      Data: 0|Spookline.SPC.Audio.RangeAudioSourceProvider, Spookline.SPC
+    - Name: clips
+      Entry: 7
+      Data: 1|System.Collections.Generic.List`1[[Spookline.SPC.Audio.AudioAssetEntry,
+        Spookline.SPC]], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 1
+    - Name: 
+      Entry: 7
+      Data: Spookline.SPC.Audio.AudioAssetEntry, Spookline.SPC
+    - Name: clip
+      Entry: 7
+      Data: 2|UnityEngine.AddressableAssets.AssetReferenceT`1[[UnityEngine.AudioClip,
+        UnityEngine.AudioModule]], Unity.Addressables
+    - Name: m_AssetGUID
+      Entry: 1
+      Data: 1c432a0f65eb80e4588959a1ee6edc0f
+    - Name: m_SubObjectName
+      Entry: 6
+      Data: 
+    - Name: m_SubObjectType
+      Entry: 6
+      Data: 
+    - Name: m_SubObjectGUID
+      Entry: 1
+      Data: 
+    - Name: m_EditorAssetChanged
+      Entry: 5
+      Data: true
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+  assetGuid: d3a83adcaf3fdc94987262e13a97e90a
+  group: {fileID: 0}
+  options:
+    loop: 0
+    volume: 1
+    pitch: 1
+    minDistance: 1
+    maxDistance: 15

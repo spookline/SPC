@@ -8,15 +8,7 @@ namespace Spookline.SPC.Ext {
 
         private readonly List<IDisposable> _disposables = new();
 
-        public event Action onStart;
-        public event Action onEnable;
-        public event Action onDisable;
-
         protected ISpookBehaviour Ext => this;
-
-        protected virtual void OnDestroy() {
-            foreach (var disposable in _disposables) disposable.Dispose();
-        }
 
         protected virtual void Start() {
             onStart?.Invoke();
@@ -25,10 +17,18 @@ namespace Spookline.SPC.Ext {
         protected virtual void OnEnable() {
             onEnable?.Invoke();
         }
-        
+
         protected virtual void OnDisable() {
             onDisable?.Invoke();
         }
+
+        protected virtual void OnDestroy() {
+            foreach (var disposable in _disposables) disposable.Dispose();
+        }
+
+        public event Action onStart;
+        public event Action onEnable;
+        public event Action onDisable;
 
         public void DisposeOnDestroy(IDisposable disposable) {
             _disposables.Add(disposable);
@@ -47,13 +47,15 @@ namespace Spookline.SPC.Ext {
     public interface IDisposableContainer {
 
         public void DisposeOnDestroy(IDisposable disposable);
+
         public void DisposeOnDestroy(Action onDispose) {
             var disposable = new LambdaDisposable(onDispose);
             DisposeOnDestroy(disposable);
         }
-        
+
         public void RemoveOnDestroyDisposal(IDisposable disposable);
+
     }
-    
+
     public interface ISpookBehaviour : IDisposableContainer, ILifecycleContainer { }
 }

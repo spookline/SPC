@@ -1,9 +1,8 @@
 using Spookline.SPC.Ext;
 using UnityEditor;
-using UnityEngine;
 
 namespace Spookline.SPC.Editor {
-    [CustomEditor(typeof(IModule), editorForChildClasses: true)]
+    [CustomEditor(typeof(IModule), true)]
     public class ModuleInspector : UnityEditor.Editor {
 
         public override void OnInspectorGUI() {

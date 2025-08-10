@@ -14,9 +14,7 @@ namespace Spookline.SPC {
         public static Globals Instance { get; private set; }
         public Dictionary<Type, ModuleInstance> ModulesByType { get; } = new();
 
-        public bool Started { get; private set; } = false;
-
-        public static UniTask UntilStarted() => UniTask.WaitUntil(() => Instance && Instance.Started);
+        public bool Started { get; private set; }
 
         // Start is called before the first frame update
         private void Awake() {
@@ -32,11 +30,6 @@ namespace Spookline.SPC {
             AsyncInitFlow().Forget();
         }
 
-        private async UniTask AsyncInitFlow() {
-            await new GlobalStartEvt().RaiseAsync();
-            Started = true;
-        }
-
         // Update is called once per frame
         private void Update() { }
 
@@ -45,6 +38,15 @@ namespace Spookline.SPC {
 
             Instance = null;
             Started = false;
+        }
+
+        public static UniTask UntilStarted() {
+            return UniTask.WaitUntil(() => Instance && Instance.Started);
+        }
+
+        private async UniTask AsyncInitFlow() {
+            await new GlobalStartEvt().RaiseAsync();
+            Started = true;
         }
 
         public void ModdingEntrypoint() { }

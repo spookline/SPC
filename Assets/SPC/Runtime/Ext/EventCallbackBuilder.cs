@@ -58,8 +58,9 @@ namespace Spookline.SPC.Ext {
     public static class EventCallbackBuilderExtensions {
 
         public static HandlerRegistration<T> Do<T>(this EventCallbackBuilder<T> builder, Func<T, UniTask> action,
-            int priority = 0, string debugName = null) where T : Evt<T> =>
-            builder.Do(evt => { action(evt).Forget(); }, priority, debugName);
+            int priority = 0, string debugName = null) where T : Evt<T> {
+            return builder.Do(evt => { action(evt).Forget(); }, priority, debugName);
+        }
 
         public static HandlerRegistration<T> AsyncDo<T>(this EventCallbackBuilder<T> builder, Func<T, UniTask> action,
             int priority = 0, string debugName = null) where T : AsyncChainEvt<T> {

@@ -39,18 +39,19 @@ namespace Spookline.SPC.Events {
     public abstract class AsyncChainEvt<TSelf> : Evt<TSelf> where TSelf : AsyncChainEvt<TSelf> {
 
         private readonly LinkedList<Func<UniTask>> _chain = new();
-        
+
         public event Func<UniTask> Chain {
             add => _chain.AddLast(value);
             remove => throw new NotSupportedException();
         }
-        
+
         public async UniTask<TSelf> RaiseAsync() {
             Raise();
             foreach (var action in _chain) {
                 if (action == null) continue;
                 await action.Invoke();
             }
+
             return (TSelf)this;
         }
 
