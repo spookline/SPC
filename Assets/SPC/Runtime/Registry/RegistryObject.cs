@@ -97,17 +97,27 @@ namespace Spookline.SPC.Registry {
             var childOperations = new List<AsyncOperationHandle>();
             foreach (var location in locations) {
                 //ResourceLocationData
-                Debug.Log(
-                    $"Location: {location.PrimaryKey}, Type: {location.ResourceType}, Data: {location.Data ?? "null"}, {location.GetType()}");
-                var childHandle = Addressables.LoadAssetAsync<TObject>(location);
-                childHandle.Completed += x => {
-                    var obj = x.Result;
-                    objectList.Add(obj);
-                    guidLookupDict[obj.assetGuid] = obj;
-                    nameLookupDict[obj.name] = obj;
-                };
-                _disposeActions.Add(() => Addressables.Release(childHandle));
-                childOperations.Add(childHandle);
+                try {
+                    Debug.Log(
+                        $"Location: {location.PrimaryKey}, Type: {location.ResourceType}, Data: {location.Data ?? "null"}, {location.GetType()}");
+                    var childHandle = Addressables.LoadAssetAsync<TObject>(location);
+                    childHandle.Completed += x => {
+                        var obj = x.Result;
+                        if (obj.assetGuid == null) {
+                            Debug.LogError(
+                                $"Loaded object from location {location.PrimaryKey} '{obj.name}' does not have a valid assetGuid. Skipping.");
+                            return;
+                        }
+
+                        objectList.Add(obj);
+                        guidLookupDict[obj.assetGuid] = obj;
+                        nameLookupDict[obj.name] = obj;
+                    };
+                    _disposeActions.Add(() => Addressables.Release(childHandle));
+                    childOperations.Add(childHandle);
+                } catch (Exception e) {
+                    Debug.LogError($"Failed to load asset from location {location.PrimaryKey}: {e.Message}");
+                }
             }
 
             var groupOperation = Addressables.ResourceManager.CreateGenericGroupOperation(childOperations);
