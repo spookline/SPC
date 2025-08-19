@@ -67,5 +67,15 @@ namespace Spookline.SPC.Ext {
             return builder.Do(evt => { evt.Chain += async () => { await action(evt); }; }, priority, debugName);
         }
 
+        public static HandlerRegistration<T> AsyncDo<T>(this EventCallbackBuilder<T> builder, Action<T> action,
+            int priority = 0, string debugName = null) where T : AsyncChainEvt<T> {
+            return builder.Do(evt => {
+                evt.Chain += () => {
+                    action(evt);
+                    return UniTask.CompletedTask;
+                };
+            }, priority, debugName);
+        }
+
     }
 }
