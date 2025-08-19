@@ -4,7 +4,6 @@ using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using Spookline.SPC.Ext;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -18,7 +17,7 @@ namespace Spookline.SPC.Registry {
         protected override void OnBeforeSerialize() {
             base.OnBeforeSerialize();
 #if UNITY_EDITOR
-            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(GetInstanceID(), out assetGuid, out _);
+            UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(GetInstanceID(), out assetGuid, out _);
 #endif
         }
 
@@ -104,9 +103,24 @@ namespace Spookline.SPC.Registry {
                     childHandle.Completed += x => {
                         var obj = x.Result;
                         if (obj.assetGuid == null) {
+#if UNITY_EDITOR
+                            if (!UnityEditor.AssetDatabase.TryGetGUIDAndLocalFileIdentifier(
+                                    obj, out var guid, out _)) {
+                                Debug.LogError(
+                                    $"Failed to retrieve asset guid for object {obj.name} at location {location.PrimaryKey}, " +
+                                    "even in editor. Skipping.");
+                                return;
+                            }
+
+                            obj.assetGuid = guid;
+                            Debug.LogWarning(
+                                "Asset guid was null, trying to retrieve it from AssetDatabase. " +
+                                "This will only work in the editor.");
+#else
                             Debug.LogError(
                                 $"Loaded object from location {location.PrimaryKey} '{obj.name}' does not have a valid assetGuid. Skipping.");
                             return;
+#endif
                         }
 
                         objectList.Add(obj);
