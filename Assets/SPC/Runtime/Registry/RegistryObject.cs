@@ -114,8 +114,8 @@ namespace Spookline.SPC.Registry {
 
                             obj.assetGuid = guid;
                             Debug.LogWarning(
-                                "Asset guid was null, trying to retrieve it from AssetDatabase. " +
-                                "This will only work in the editor.");
+                                $"Asset guid for {obj.name} was null, and was set to {guid} after AssetDatabase lookup. " +
+                                "This will only work in the editor, in runtime builds this issue should not occur.");
 #else
                             Debug.LogError(
                                 $"Loaded object from location {location.PrimaryKey} '{obj.name}' does not have a valid assetGuid. Skipping.");
