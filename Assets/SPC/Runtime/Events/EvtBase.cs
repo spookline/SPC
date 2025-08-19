@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace Spookline.SPC.Events {
     public abstract class Evt<TSelf> : EvtBase where TSelf : Evt<TSelf> {
@@ -49,7 +50,11 @@ namespace Spookline.SPC.Events {
             Raise();
             foreach (var action in _chain) {
                 if (action == null) continue;
-                await action.Invoke();
+                try {
+                    await action.Invoke();
+                } catch (Exception e) {
+                    Debug.LogError($"Error in async chain for event {typeof(TSelf).Name}: {e}");
+                }
             }
 
             return (TSelf)this;
