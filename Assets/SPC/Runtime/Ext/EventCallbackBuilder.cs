@@ -63,11 +63,20 @@ namespace Spookline.SPC.Ext {
         }
 
         public static HandlerRegistration<T> AsyncDo<T>(this EventCallbackBuilder<T> builder, Func<T, UniTask> action,
+            int priority = 0, string debugName = null) where T : AsyncChainEvt<T> =>
+            ChainDo(builder, action, priority, debugName);
+
+        public static HandlerRegistration<T> AsyncDo<T>(this EventCallbackBuilder<T> builder, Action<T> action,
+            int priority = 0, string debugName = null) where T : AsyncChainEvt<T> =>
+            ChainDo(builder, action, priority, debugName);
+
+        // Newer clearer versions
+        public static HandlerRegistration<T> ChainDo<T>(this EventCallbackBuilder<T> builder, Func<T, UniTask> action,
             int priority = 0, string debugName = null) where T : AsyncChainEvt<T> {
             return builder.Do(evt => { evt.Chain += async () => { await action(evt); }; }, priority, debugName);
         }
 
-        public static HandlerRegistration<T> AsyncDo<T>(this EventCallbackBuilder<T> builder, Action<T> action,
+        public static HandlerRegistration<T> ChainDo<T>(this EventCallbackBuilder<T> builder, Action<T> action,
             int priority = 0, string debugName = null) where T : AsyncChainEvt<T> {
             return builder.Do(evt => {
                 evt.Chain += () => {

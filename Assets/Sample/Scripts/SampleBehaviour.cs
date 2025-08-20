@@ -1,9 +1,11 @@
+using Cysharp.Threading.Tasks;
 using Spookline.SPC.Events;
 using Spookline.SPC.Ext;
+using Spookline.SPC.Save;
 using UnityEngine;
 
 public class SampleBehaviour : SpookBehaviour {
-
+    
     public void Awake() {
         On<MyCustomEvent>().Do(OnCustomEvent);
         On<MyCustomEvent>().Do(OnCustomEvent2);
