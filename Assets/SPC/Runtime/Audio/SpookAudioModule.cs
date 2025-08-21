@@ -45,6 +45,7 @@ namespace Spookline.SPC.Audio {
             var job = reference.job;
             await Prepare(job.definition);
             var handle = AudioManager.Instance.Lease();
+            handle.source.outputAudioMixerGroup = job.definition.group;
             job.definition.provider.Apply(handle, job);
             reference.handle = handle;
             handle.ApplyChanges(reference);

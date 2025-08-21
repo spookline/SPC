@@ -69,9 +69,8 @@ MonoBehaviour:
       Entry: 8
       Data: 
   assetGuid: d3a83adcaf3fdc94987262e13a97e90a
-  group: {fileID: 0}
+  group: {fileID: 6860380124398799620, guid: b6fba65696d30a44292c7978802fa632, type: 2}
   options:
-    loop: 0
     volume: 1
     pitch: 1
     minDistance: 1
