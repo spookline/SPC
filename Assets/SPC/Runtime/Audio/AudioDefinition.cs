@@ -26,7 +26,7 @@ namespace Spookline.SPC.Audio {
         [HideLabel]
         [InlineProperty]
         public IAudioSourceProvider provider;
-
+        
     }
 
     [Serializable]
@@ -35,14 +35,12 @@ namespace Spookline.SPC.Audio {
     public struct AudioOptions {
 
         public static readonly AudioOptions Default = new() {
-            loop = false,
             volume = 1f,
             pitch = 1f,
             minDistance = 1f,
             maxDistance = 15f
         };
 
-        public bool loop;
         public float volume;
         public float pitch;
         public float minDistance;
@@ -50,11 +48,6 @@ namespace Spookline.SPC.Audio {
 
         public AudioOptions Volume(float volume) {
             this.volume = volume;
-            return this;
-        }
-
-        public AudioOptions Loop(bool loop = true) {
-            this.loop = loop;
             return this;
         }
 
@@ -75,12 +68,20 @@ namespace Spookline.SPC.Audio {
 
 
         public readonly void ApplyTo(AudioSource source) {
-            source.loop = loop;
             source.volume = volume;
             source.pitch = pitch;
             source.minDistance = minDistance;
             source.maxDistance = maxDistance;
         }
+
+    }
+
+    [Serializable, InlineProperty]
+    public class AudioOptionOverride {
+        [ToggleGroup("hasOverride", "Audio Overrides")]
+        public bool hasOverride;
+        [ToggleGroup("hasOverride"), InlineProperty, HideLabel]
+        public AudioOptions options = new();
 
     }
 
@@ -128,22 +129,44 @@ namespace Spookline.SPC.Audio {
             };
         }
 
-        public void Play() {
-            SpookAudioModule.Instance.Play(this).Forget();
+        public async UniTask<AudioJobReference> Unstarted() {
+            var reference = CreateNewReference();
+            reference.state = AudioJobReferenceState.Pending;
+            await SpookAudioModule.Instance.Unstarted(reference);
+            return reference;
         }
 
-        public void PlayAt(Vector3 position) {
-            SpookAudioModule.Instance.Play(this, position).Forget();
+        public AudioJobReference Play() {
+            var reference = CreateNewReference();
+            reference.state = AudioJobReferenceState.Pending;
+            SpookAudioModule.Instance.Play(reference).Forget();
+            return reference;
         }
 
-        public void PlayTracked(Transform transform) {
-            SpookAudioModule.Instance.Play(this, transform).Forget();
+        public AudioJobReference PlayAt(Vector3 position) {
+            var reference = CreateNewReference();
+            reference.state = AudioJobReferenceState.Pending;
+            SpookAudioModule.Instance.Play(reference, position).Forget();
+            return reference;
+        }
+
+        public AudioJobReference PlayTracked(Transform transform) {
+            var reference = CreateNewReference();
+            reference.state = AudioJobReferenceState.Pending;
+            SpookAudioModule.Instance.Play(reference, transform).Forget();
+            return reference;
         }
 
         public UniTask<AudioClip> GetClipAsync() {
             return SpookAudioModule.Instance.GetClip(this);
         }
 
+        public AudioJobReference CreateNewReference() {
+            return new AudioJobReference() {
+                job = this,
+            };
+        }
+        
     }
 
 

@@ -20,4 +20,14 @@ MonoBehaviour:
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
-    SerializationNodes: []
+    SerializationNodes:
+    - Name: lookupEnum
+      Entry: 7
+      Data: 0|System.RuntimeType, mscorlib
+    - Name: 
+      Entry: 1
+      Data: Sample.Audio.AudioKeys, Assembly-CSharp
+    - Name: 
+      Entry: 8
+      Data: 
+  mixer: {fileID: 0}
