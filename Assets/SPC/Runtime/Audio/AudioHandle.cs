@@ -230,7 +230,7 @@ namespace Spookline.SPC.Audio {
 
     }
 
-    public class AudioJobReference {
+    public class AudioJobReference : IDisposable {
 
         public AudioHandle handle;
         public AudioJob job;
@@ -271,7 +271,7 @@ namespace Spookline.SPC.Audio {
 
     }
 
-    public class LoopingAudioJob {
+    public class LoopingAudioJob : IDisposable {
 
         public readonly AudioJob definition;
         public readonly Transform tracked;
