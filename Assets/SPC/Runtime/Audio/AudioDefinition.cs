@@ -212,7 +212,7 @@ namespace Spookline.SPC.Audio {
                 case 1:
                     return new AudioJob(definition, 0, definition.options);
                 case > 1: {
-                    var randomIndex = Random.Range(0, _loadedClips.Count);
+                    var randomIndex = Random.Range(0, clips.Count);
                     return new AudioJob(definition, randomIndex, definition.options);
                 }
                 default:
