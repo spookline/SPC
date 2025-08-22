@@ -62,7 +62,6 @@ namespace Spookline.SPC.Audio {
             onEnd = null;
             onContinuation = null;
             source.clip = null;
-            Debug.Log("Audio handle released");
         }
 
 
@@ -350,7 +349,6 @@ namespace Spookline.SPC.Audio {
             if (!_active) return;
             var nextIndex = (index + 1) % cycleCount;
             StartAt(nextIndex);
-            Debug.Log($"LoopingAudioJob: Fading out index {index}, starting at index {nextIndex}");
         }
 
         private void StartAt(int index) {
