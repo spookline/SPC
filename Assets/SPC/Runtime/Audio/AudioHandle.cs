@@ -143,13 +143,11 @@ namespace Spookline.SPC.Audio {
                                 _startedFadeOut = true;
                                 controlVolume = _targetVolume;
                                 CallContinuation();
-                                Debug.Log("Audio fade out begun");
                             } else {
                                 var t = (time - _fadeOutStart) / (_fadeOutEnd - _fadeOutStart);
                                 controlVolume = _targetVolume * (1f - t);
                             }
                         } else if (time >= _fadeOutStart && time < _fadeOutEnd) {
-                            Debug.Log($"Audio fade out end at {time} with end {_fadeOutStart}-{_fadeOutEnd}");
                             controlVolume = 0f;
                             EndNow();
                         }
@@ -166,8 +164,7 @@ namespace Spookline.SPC.Audio {
 
         public void EndNow() {
             if (HasEnded) return;
-            Debug.Log("Audio clip has ended");
-
+            
             source.Stop();
             _state = AudioHandleState.Ended;
             _startedFadeIn = false;
