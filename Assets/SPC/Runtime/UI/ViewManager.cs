@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Spookline.SPC.Events;
 using Spookline.SPC.Ext;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -36,6 +37,11 @@ namespace Spookline.SPC.UI {
                     return;
                 }
 
+                var evt = new ViewPushEvt {
+                    View = view
+                }.Raise();
+                if (evt.IsCancelled) return;
+
                 var existingIndex = _stacks.IndexOf(view);
                 if (existingIndex != -1 && existingIndex != _stacks.Count - 1) {
                     _stacks.RemoveAt(existingIndex);
@@ -62,6 +68,10 @@ namespace Spookline.SPC.UI {
             if (IsEmpty) return;
 
             var topView = _stacks[^1];
+            var evt = new ViewPopEvt {
+                View = topView
+            }.Raise();
+            if (evt.IsCancelled) return;
             Debug.Log("[ViewManager] Popping view: " + GetNameOfView(topView));
             await topView.Close();
             _stacks.RemoveAt(_stacks.Count - 1);
@@ -95,6 +105,24 @@ namespace Spookline.SPC.UI {
         private string GetNameOfView(IView view) {
             return view is MonoBehaviour mb ? mb.gameObject.name : view.GetType().Name;
         }
+
+    }
+
+    public class ViewEvt<T> : Evt<T> where T : ViewEvt<T> {
+
+        public IView View { get; set; }
+
+    }
+
+    public class ViewPushEvt : ViewEvt<ViewPushEvt> {
+
+        public bool IsCancelled { get; set; } = false;
+
+    }
+
+    public class ViewPopEvt : ViewEvt<ViewPopEvt> {
+
+        public bool IsCancelled { get; set; } = false;
 
     }
 }
