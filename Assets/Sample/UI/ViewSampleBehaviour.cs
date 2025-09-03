@@ -1,10 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
 using Spookline.SPC.UI;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Sample.UI {
-    public class ViewLifecycleBehaviour : MonoBehaviour {
+    public class ViewSampleBehaviour : MonoBehaviour {
 
         public SimpleView escapeView;
         public SimpleView view1;
@@ -20,15 +19,12 @@ namespace Sample.UI {
                     ViewManager.Instance.Push(escapeView).Forget();
                     return;
                 }
+
                 ViewManager.Instance.Pop().Forget();
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1)) {
-                ViewManager.Instance.Push(view1).Forget();
-            }
-            if (Input.GetKeyDown(KeyCode.Alpha2)) {
-                ViewManager.Instance.Push(view2).Forget();
-            }
+            if (Input.GetKeyDown(KeyCode.Alpha1)) ViewManager.Instance.Push(view1).Forget();
+            if (Input.GetKeyDown(KeyCode.Alpha2)) ViewManager.Instance.Push(view2).Forget();
         }
 
     }

@@ -21,6 +21,10 @@ namespace Spookline.SPC.UI {
             Debug.Log("[ViewManager] Cleared view stack");
         }
 
+        public bool Contains(IView view) {
+            return _stacks.Contains(view);
+        }
+
         /// <summary>
         ///     Pushes a new <see cref="IView" /> onto the stack.
         ///     If the view already exists in the stack and is not the top view, it is removed first.
@@ -33,7 +37,7 @@ namespace Spookline.SPC.UI {
             if (!IsEmpty) {
                 var topView = _stacks[^1];
                 if (topView == view) {
-                    Debug.Log("[ViewManager] Top view is already the view being pushed, skipping open.");
+                    await Pop(view);
                     return;
                 }
 
@@ -95,7 +99,11 @@ namespace Spookline.SPC.UI {
 
             var index = _stacks.IndexOf(view);
             if (index == -1) return;
-
+            var evt = new ViewPopEvt {
+                View = view
+            }.Raise();
+            if (evt.IsCancelled) return;
+            Debug.Log("[ViewManager] Popping specific view: " + GetNameOfView(view));
             await view.Close();
             _stacks.RemoveAt(index);
 
