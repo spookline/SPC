@@ -116,6 +116,18 @@ namespace Spookline.SPC.UI {
 
     }
 
+    public static class IViewExtensions {
+
+        public static async UniTask Push(this IView view) {
+            await ViewManager.Instance.Push(view);
+        }
+
+        public static async UniTask Pop(this IView view) {
+            await ViewManager.Instance.Pop(view);
+        }
+
+    }
+
     public class ViewEvt<T> : Evt<T> where T : ViewEvt<T> {
 
         public IView View { get; set; }

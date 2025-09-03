@@ -16,15 +16,14 @@ namespace Sample.UI {
         private void Update() {
             if (Input.GetKeyDown(KeyCode.Escape)) {
                 if (ViewManager.Instance.IsEmpty) {
-                    ViewManager.Instance.Push(escapeView).Forget();
+                    escapeView.Push().Forget();
                     return;
                 }
-
                 ViewManager.Instance.Pop().Forget();
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1)) ViewManager.Instance.Push(view1).Forget();
-            if (Input.GetKeyDown(KeyCode.Alpha2)) ViewManager.Instance.Push(view2).Forget();
+            if (Input.GetKeyDown(KeyCode.Alpha1)) view1.Push().Forget();
+            if (Input.GetKeyDown(KeyCode.Alpha2)) view2.Push().Forget();
         }
 
     }
