@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using Spookline.SPC.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -9,11 +9,13 @@ namespace Spookline.SPC {
 
         private bool _isHighlighted;
         private bool _isSelected;
+        private readonly Label _label;
         private Color _normalColor;
 
         private float _transitionDuration = 0.15f;
 
         public TextButton() {
+            _label = this;
             RegisterCallback<PointerEnterEvent>(_ => { IsHighlighted = true; });
             RegisterCallback<PointerLeaveEvent>(_ => { IsHighlighted = false; });
             RegisterCallback<ClickEvent>(_ => { OnClick?.Invoke(); });
@@ -40,8 +42,8 @@ namespace Spookline.SPC {
             get => _transitionDuration;
             set {
                 _transitionDuration = value;
-                style.transitionProperty = new List<StylePropertyName>(new[] { new StylePropertyName("color") });
-                style.transitionDuration = new List<TimeValue>(new[] { new TimeValue(value, TimeUnit.Second) });
+                _label.TransitionDuration(value);
+                _label.TransitionProperties("color");
             }
         }
 

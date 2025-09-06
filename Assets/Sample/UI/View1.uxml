@@ -1,5 +1,15 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Sample/UI/Colors.uss?fileID=7433441132597879392&amp;guid=2ef7f3034e425a44391f8f4b121639f2&amp;type=3#Colors" />
     <ui:VisualElement style="flex-grow: 1; justify-content: center; align-items: center; align-self: center; align-content: auto;">
-        <ui:VisualElement style="flex-grow: 0; width: 1200px; height: 700px; flex-shrink: 0; background-color: rgba(255, 1, 1, 0.53);" />
+        <ui:VisualElement style="flex-grow: 0; width: 1200px; height: 700px; flex-shrink: 0; background-color: rgba(255, 1, 1, 0.53);">
+            <Spookline.SPC.Button type="Outline" icon-size="16,16" padding="16,6" outline-color="#FFFFFFFF" is-selected="false" transition-duration="0.2" is-highlighted="false" text="CLICK ME TO CLOSE" border-radius="13">
+                <outlineColor>
+                    <Spookline.SPC.ButtonColor normal="#FFFFFF9F" highlighted="#FFFFFF9F" selected="#FF0000FF" />
+                </outlineColor>
+                <textColor>
+                    <Spookline.SPC.ButtonColor normal="#D6D6D6FF" highlighted="#B0B0B0FF" />
+                </textColor>
+            </Spookline.SPC.Button>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

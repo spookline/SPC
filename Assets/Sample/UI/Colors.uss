@@ -1,0 +1,4 @@
+:root {
+    --c-primary: #0078d7;
+    --c-primary-dark: #005a9e;
+}
